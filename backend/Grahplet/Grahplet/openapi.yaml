@@ -1,0 +1,846 @@
+openapi: 3.0.3
+info:
+  title: graphlet
+  version: 1.0.0
+  description: |
+    OpenAPI specification for the "graphlet" API.
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+
+paths:
+  /api/login:
+    post:
+      summary: Login
+      description: |
+        Authenticates a user with email and password.
+        On success the Authorization Header will contain the new token.
+      operationId: login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+              required:
+                - email
+                - password
+      responses:
+        '200':
+          description: OK
+          headers:
+            Authorization:
+              description: Authorization token.
+              schema:
+                type: string
+        '401':
+          description: Unauthorized-incorrect credentials
+
+  /api/logout:
+    post:
+      summary: Logout
+      description: |
+        Logs out the currently authenticated user. If the Authorization header contains a valid token,
+        the server responds with 200. If the Authorization header is missing or invalid, it responds with 401.
+        In case the Authorization Header contains a custom API key, it will delete it. (So do not trigger this with bots.)
+      operationId: logout
+      responses:
+        '200':
+          description: Successfully logged out.
+        '401':
+          description: Unauthorized - missing or invalid Authorization header
+
+  /api/workspace:
+    get:
+      summary: List Workspaces
+      description: Returns all available workspaces to the authenticated user.
+      operationId: listWorkspaces
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Workspace'
+        '401':
+          description: Unauthorized - missing or invalid Authorization header
+    post:
+      summary: Create Workspace
+      description: Creates a new workspace. Requires authorization.
+      operationId: createWorkspace
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkspaceCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workspace'
+        '400':
+          description: Bad Request - invalid payload
+        '401':
+          description: Unauthorized - missing or invalid Authorization header
+
+  /api/workspace/{id}:
+    get:
+      summary: Get Workspace
+      description: Returns the given workspace info if the user has access to it.
+      operationId: getWorkspace
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Workspace ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workspace'
+        '401':
+          description: Unauthorized - missing or invalid Authorization header
+        '404':
+          description: No Resource - workspace not found or access denied
+    put:
+      summary: Update Workspace
+      description: Updates a workspace with the provided partial fields. Requires authorization.
+      operationId: updateWorkspace
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Workspace ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkspaceUpdate'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workspace'
+        '400':
+          description: Bad Request - invalid payload
+        '401':
+          description: Unauthorized - missing or invalid Authorization header
+        '404':
+          description: No Resource - workspace not found or access denied
+    delete:
+      summary: Delete Workspace
+      description: Deletes the given workspace. Requires authorization.
+      operationId: deleteWorkspace
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Workspace ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: No Content - workspace deleted
+        '401':
+          description: Unauthorized - missing or invalid Authorization header
+        '404':
+          description: No Resource - workspace not found or access denied
+
+  /api/workspace/{workspaceId}/tags:
+    post:
+      summary: Create Tag
+      description: Creates a new tag in the specified workspace. Requires authorization.
+      operationId: createTag
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          description: Workspace ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TagCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+        '400':
+          description: Bad Request - invalid payload
+        '401':
+          description: Unauthorized - missing or invalid Authorization header
+        '404':
+          description: No Resource - workspace not found or access denied
+    get:
+      summary: List Tags
+      description: Returns a list of tags for the specified workspace. Requires authorization.
+      operationId: listTags
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          description: Workspace ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tag'
+        '401':
+          description: Unauthorized - missing or invalid Authorization header
+        '404':
+          description: No Resource - workspace not found or access denied
+
+  /api/workspace/{workspaceId}/tags/{tagId}:
+    get:
+      summary: Get Tag
+      description: Returns the tag if it exists. Requires authorization.
+      operationId: getTag
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          description: Workspace ID
+          schema:
+            type: string
+            format: uuid
+        - name: tagId
+          in: path
+          required: true
+          description: Tag ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+        '401':
+          description: Unauthorized - missing or invalid Authorization header
+        '404':
+          description: No Resource - tag not found or access denied
+
+  /api/note:
+    get:
+      summary: List Notes
+      description: Returns all notes accessible to the authenticated user.
+      operationId: listNotes
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Note'
+        '401':
+          description: Unauthorized - missing or invalid Authorization header
+    post:
+      summary: Create Note
+      description: Creates a new note. Requires authorization.
+      operationId: createNote
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NoteCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Note'
+        '400':
+          description: Bad Request - invalid payload
+        '401':
+          description: Unauthorized - missing or invalid Authorization header
+
+  /api/note/{noteId}:
+    get:
+      summary: Get Note
+      description: Returns the note if the user has access to it. Requires authorization.
+      operationId: getNote
+      parameters:
+        - name: noteId
+          in: path
+          required: true
+          description: Note ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Note'
+        '401':
+          description: Unauthorized - missing or invalid Authorization header
+        '404':
+          description: No Resource - note not found or access denied
+    put:
+      summary: Update Note
+      description: Updates a note with the provided partial fields. Requires authorization.
+      operationId: updateNote
+      parameters:
+        - name: noteId
+          in: path
+          required: true
+          description: Note ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NoteUpdate'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Note'
+        '400':
+          description: Bad Request - invalid payload
+        '401':
+          description: Unauthorized - missing or invalid Authorization header
+        '404':
+          description: No Resource - note not found or access denied
+    delete:
+      summary: Delete Note
+      description: Deletes the given note. Requires authorization.
+      operationId: deleteNote
+      parameters:
+        - name: noteId
+          in: path
+          required: true
+          description: Note ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: No Content - note deleted
+        '401':
+          description: Unauthorized - missing or invalid Authorization header
+        '404':
+          description: No Resource - note not found or access denied
+
+  /api/note/{noteId}/tags/{tagId}:
+    get:
+      summary: Get Note-Tag Association
+      description: Returns the tag if it is associated with the specified note. Requires authorization.
+      operationId: getNoteTag
+      parameters:
+        - name: noteId
+          in: path
+          required: true
+          description: Note ID
+          schema:
+            type: string
+            format: uuid
+        - name: tagId
+          in: path
+          required: true
+          description: Tag ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+        '401':
+          description: Unauthorized - missing or invalid Authorization header
+        '404':
+          description: No Resource - note or tag not found, or association missing
+    put:
+      summary: Attach Tag to Note
+      description: Attaches the tag to the note. Idempotent. Requires authorization.
+      operationId: attachTagToNote
+      parameters:
+        - name: noteId
+          in: path
+          required: true
+          description: Note ID
+          schema:
+            type: string
+            format: uuid
+        - name: tagId
+          in: path
+          required: true
+          description: Tag ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Note'
+        '401':
+          description: Unauthorized - missing or invalid Authorization header
+        '404':
+          description: No Resource - note or tag not found
+    delete:
+      summary: Detach Tag from Note
+      description: Removes the tag from the note. Requires authorization.
+      operationId: detachTagFromNote
+      parameters:
+        - name: noteId
+          in: path
+          required: true
+          description: Note ID
+          schema:
+            type: string
+            format: uuid
+        - name: tagId
+          in: path
+          required: true
+          description: Tag ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: No Content - association removed
+        '401':
+          description: Unauthorized - missing or invalid Authorization header
+        '404':
+          description: No Resource - note or tag not found
+
+  /api/note/{noteId}/relation:
+    post:
+      summary: Create Relation
+      description: Creates a new relation from this note to another note. Requires authorization.
+      operationId: createNoteRelation
+      parameters:
+        - name: noteId
+          in: path
+          required: true
+          description: Source Note ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NoteRelationCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NoteRelation'
+        '400':
+          description: Bad Request - invalid payload
+        '401':
+          description: Unauthorized - missing or invalid Authorization header
+        '404':
+          description: No Resource - note(s) not found or access denied
+
+  /api/note/{noteId}/relation/{relationId}:
+    get:
+      summary: Get Relation
+      description: Returns the relation if it exists and the user has access. Requires authorization.
+      operationId: getNoteRelation
+      parameters:
+        - name: noteId
+          in: path
+          required: true
+          description: Source Note ID
+          schema:
+            type: string
+            format: uuid
+        - name: relationId
+          in: path
+          required: true
+          description: Relation ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NoteRelation'
+        '401':
+          description: Unauthorized - missing or invalid Authorization header
+        '404':
+          description: No Resource - relation not found or access denied
+    put:
+      summary: Update Relation
+      description: Updates a relation with the provided partial fields. Requires authorization.
+      operationId: updateNoteRelation
+      parameters:
+        - name: noteId
+          in: path
+          required: true
+          description: Source Note ID
+          schema:
+            type: string
+            format: uuid
+        - name: relationId
+          in: path
+          required: true
+          description: Relation ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NoteRelationUpdate'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NoteRelation'
+        '400':
+          description: Bad Request - invalid payload
+        '401':
+          description: Unauthorized - missing or invalid Authorization header
+        '404':
+          description: No Resource - relation not found or access denied
+    delete:
+      summary: Delete Relation
+      description: Deletes the given relation. Requires authorization.
+      operationId: deleteNoteRelation
+      parameters:
+        - name: noteId
+          in: path
+          required: true
+          description: Source Note ID
+          schema:
+            type: string
+            format: uuid
+        - name: relationId
+          in: path
+          required: true
+          description: Relation ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: No Content - relation deleted
+        '401':
+          description: Unauthorized - missing or invalid Authorization header
+        '404':
+          description: No Resource - relation not found or access denied
+
+components:
+  securitySchemes:
+    AuthHeader:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: |
+        Ez egy string amit a Login ad vissza, vagy az API 
+  schemas:
+    Workspace:
+      type: object
+      description: Workspace entity
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier of the workspace.
+        name:
+          type: string
+          description: Human-readable name of the workspace.
+      required:
+        - id
+        - name
+    WorkspaceCreate:
+      type: object
+      description: Workspace payload without an ID for creation
+      properties:
+        name:
+          type: string
+          description: Human-readable name of the workspace.
+      required:
+        - name
+    WorkspaceUpdate:
+      type: object
+      description: Partial workspace payload for updates
+      properties:
+        name:
+          type: string
+          description: Human-readable name of the workspace.
+      additionalProperties: false
+    Uuid:
+      type: string
+      format: uuid
+      description: UUID string
+    Color:
+      type: array
+      description: RGB color as a 3-element array of integers [R,G,B]
+      items:
+        type: integer
+        format: int32
+        minimum: 0
+        maximum: 255
+      minItems: 3
+      maxItems: 3
+    FileInfo:
+      type: object
+      description: File metadata for file-type notes
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        filename:
+          type: string
+        content_type:
+          type: string
+          description: Type of the file content
+          enum: [img, video, audio, other]
+        content_url:
+          type: string
+          format: uri
+      required:
+        - id
+        - filename
+        - content_type
+        - content_url
+    Tag:
+      type: object
+      description: Tag entity for notes
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        name:
+          type: string
+        color:
+          $ref: '#/components/schemas/Color'
+      required:
+        - id
+        - name
+        - color
+    TagCreate:
+      type: object
+      description: Tag payload without an ID for creation
+      properties:
+        name:
+          type: string
+        color:
+          $ref: '#/components/schemas/Color'
+      required:
+        - name
+        - color
+    TagUpdate:
+      type: object
+      description: Partial tag payload for updates
+      properties:
+        name:
+          type: string
+        color:
+          $ref: '#/components/schemas/Color'
+      additionalProperties: false
+    NoteRelation:
+      type: object
+      description: Relation between two notes
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        connection:
+          type: array
+          description: The two connected Note IDs
+          items:
+            $ref: '#/components/schemas/Uuid'
+          minItems: 2
+          maxItems: 2
+        name:
+          type: string
+      required:
+        - id
+        - connection
+        - name
+    NoteCreate:
+      type: object
+      description: Note payload without an ID for creation
+      properties:
+        name:
+          type: string
+          description: Note title
+        kind:
+          type: string
+          enum: [txt, url, file]
+        value:
+          type: string
+          description: Text or URL value for txt and url notes
+        file:
+          $ref: '#/components/schemas/FileInfo'
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Uuid'
+      required:
+        - name
+        - kind
+    NoteUpdate:
+      type: object
+      description: Partial note payload for updates
+      properties:
+        name:
+          type: string
+        kind:
+          type: string
+          enum: [txt, url, file]
+        value:
+          type: string
+        file:
+          $ref: '#/components/schemas/FileInfo'
+      additionalProperties: false
+    NoteRelationCreate:
+      type: object
+      description: Relation payload without an ID for creation; creates a relation between the source note and another note.
+      properties:
+        otherId:
+          $ref: '#/components/schemas/Uuid'
+        name:
+          type: string
+      required:
+        - otherId
+        - name
+    NoteRelationUpdate:
+      type: object
+      description: Partial relation payload for updates
+      properties:
+        name:
+          type: string
+      additionalProperties: false
+    Note:
+      type: object
+      description: Note entity
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        name:
+          type: string
+          description: Note title
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
+        relations:
+          type: array
+          items:
+            $ref: '#/components/schemas/NoteRelation'
+        kind:
+          type: string
+          enum: [txt, url, file]
+        value:
+          type: string
+          description: Text or URL value for txt and url notes
+        file:
+          $ref: '#/components/schemas/FileInfo'
+      required:
+        - id
+        - name
+        - tags
+        - relations
+        - kind
+    User:
+      type: object
+      description: User entity (private)
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        username:
+          type: string
+        profile_pic_url:
+          type: string
+          format: uri
+        email:
+          type: string
+          format: email
+        last_seen:
+          type: string
+          format: date-time
+      required:
+        - id
+        - username
+        - profile_pic_url
+        - email
+        - last_seen
+    PublicUser:
+      type: object
+      description: Public-facing user profile
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        username:
+          type: string
+        profile_pic_url:
+          type: string
+          format: uri
+      required:
+        - id
+        - username
+        - profile_pic_url
+
+security:
+  - AuthHeader: []

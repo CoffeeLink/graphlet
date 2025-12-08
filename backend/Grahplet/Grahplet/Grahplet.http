@@ -1,0 +1,197 @@
+### Grahplet API Test Requests
+@baseUrl = http://localhost:5188
+@email = demo@example.com
+@password = demo
+
+### Login
+POST {{baseUrl}}/api/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+> {%
+    client.global.set("token", response.body.token);
+%}
+
+### List Workspaces
+GET {{baseUrl}}/api/workspace
+Authorization: {{token}}
+
+### Create Workspace
+POST {{baseUrl}}/api/workspace
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "name": "My First Workspace"
+}
+
+> {%
+    if (response.status === 201) {
+        client.global.set("workspaceId", response.body.id);
+    }
+%}
+
+### Get Workspace
+GET {{baseUrl}}/api/workspace/{{workspaceId}}
+Authorization: {{token}}
+
+### Update Workspace
+PUT {{baseUrl}}/api/workspace/{{workspaceId}}
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "name": "Updated Workspace"
+}
+
+### Create Tag
+POST {{baseUrl}}/api/workspace/{{workspaceId}}/tags
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "name": "Important",
+  "color": [255, 0, 0]
+}
+
+> {%
+    if (response.status === 201) {
+        client.global.set("tagId", response.body.id);
+    }
+%}
+
+### List Tags
+GET {{baseUrl}}/api/workspace/{{workspaceId}}/tags
+Authorization: {{token}}
+
+### Get Tag
+GET {{baseUrl}}/api/workspace/{{workspaceId}}/tags/{{tagId}}
+Authorization: {{token}}
+
+### Update Tag
+PUT {{baseUrl}}/api/workspace/{{workspaceId}}/tags/{{tagId}}
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "name": "Very Important",
+  "color": [0, 255, 0]
+}
+
+### Create Note (Text)
+POST {{baseUrl}}/api/note
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "name": "My First Note",
+  "kind": "txt",
+  "value": "This is a test note with some content"
+}
+
+> {%
+    if (response.status === 201) {
+        client.global.set("noteId", response.body.id);
+    }
+%}
+
+### Create Note (URL)
+POST {{baseUrl}}/api/note
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "name": "Useful Link",
+  "kind": "url",
+  "value": "https://example.com"
+}
+
+> {%
+    if (response.status === 201) {
+        client.global.set("noteId2", response.body.id);
+    }
+%}
+
+### List Notes
+GET {{baseUrl}}/api/note
+Authorization: {{token}}
+
+### Get Note
+GET {{baseUrl}}/api/note/{{noteId}}
+Authorization: {{token}}
+
+### Update Note
+PUT {{baseUrl}}/api/note/{{noteId}}
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "name": "Updated Note Title",
+  "value": "Updated content"
+}
+
+### Attach Tag to Note
+PUT {{baseUrl}}/api/note/{{noteId}}/tags/{{tagId}}
+Authorization: {{token}}
+
+### Get Note-Tag Association
+GET {{baseUrl}}/api/note/{{noteId}}/tags/{{tagId}}
+Authorization: {{token}}
+
+### Create Note Relation
+POST {{baseUrl}}/api/note/{{noteId}}/relation
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "otherId": "{{noteId2}}",
+  "name": "references"
+}
+
+> {%
+    if (response.status === 201) {
+        client.global.set("relationId", response.body.id);
+    }
+%}
+
+### Get Note Relation
+GET {{baseUrl}}/api/note/{{noteId}}/relation/{{relationId}}
+Authorization: {{token}}
+
+### Update Relation
+PUT {{baseUrl}}/api/note/{{noteId}}/relation/{{relationId}}
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "name": "strongly_references"
+}
+
+### Detach Tag from Note
+DELETE {{baseUrl}}/api/note/{{noteId}}/tags/{{tagId}}
+Authorization: {{token}}
+
+### Delete Note Relation
+DELETE {{baseUrl}}/api/note/{{noteId}}/relation/{{relationId}}
+Authorization: {{token}}
+
+### Delete Note
+DELETE {{baseUrl}}/api/note/{{noteId}}
+Authorization: {{token}}
+
+### Delete Tag
+DELETE {{baseUrl}}/api/workspace/{{workspaceId}}/tags/{{tagId}}
+Authorization: {{token}}
+
+### Delete Workspace
+DELETE {{baseUrl}}/api/workspace/{{workspaceId}}
+Authorization: {{token}}
+
+### Logout
+POST {{baseUrl}}/api/logout
+Authorization: {{token}}
+
