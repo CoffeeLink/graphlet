@@ -1,0 +1,17 @@
+.loginsection
+{
+    border: 1px solid #ccc;
+    height: 100%;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+
+}
+
+.registersection{
+    border: 1px solid #ccc;
+    height: 100%;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+}

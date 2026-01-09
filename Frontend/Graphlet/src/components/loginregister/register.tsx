@@ -1,15 +1,38 @@
+import {useState} from "react";
+import {useNavigate} from "react-router-dom";
+import SuccessfulRegister from "./successfulRegister.tsx";
+import './login.css'
+
 export default function Register(){
+    const [loading, setLoading] = useState(false);
+    const [success, setSuccess] = useState(false);
+    const navigate = useNavigate();
+
     function register(){
-        const emailInput = document.querySelector(".usernameInput") as HTMLInputElement
-        const passwordInput = document.querySelector(".passwordInput") as HTMLInputElement
-        const usernameInput = document.querySelector(".usernameInput") as HTMLInputElement
+        const emailInput = document.querySelector(".emailInput") as HTMLInputElement | null;
+        const passwordInput = document.querySelector(".passwordInput") as HTMLInputElement | null;
+        const usernameInput = document.querySelector(".usernameInput") as HTMLInputElement | null;
+
+        if(!emailInput || !passwordInput || !usernameInput) return;
+
+        // Simulate sending to backend
+        setLoading(true);
 
         console.log(emailInput.value, passwordInput.value, usernameInput.value)
+
+        // On successful response: show success immediately, then redirect after a delay
+        setSuccess(true);
+        setLoading(false);
+
+        setTimeout(() => {
+            navigate('/login');
+        }, 1000);
     }
- 
+
     return(
         <section className="registersection">
             <h1>Register</h1>
+            {success && <SuccessfulRegister />}
             <div>
                 <table className="registerForm">
                     <tbody>
@@ -26,7 +49,7 @@ export default function Register(){
                             <td><input type="password" className="passwordInput" required /></td>
                         </tr>
                         <tr>
-                            <td colSpan={2}><button onClick={register}>Login</button></td>
+                            <td colSpan={2}><button onClick={register} disabled={loading}>{loading ? 'Working...' : 'Register'}</button></td>
                         </tr>
                         <tr>
                             <td colSpan={2}><a href="/login">Already have an account? Login here!</a></td>

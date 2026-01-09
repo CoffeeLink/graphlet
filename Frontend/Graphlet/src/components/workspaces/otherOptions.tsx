@@ -1,10 +1,11 @@
 import "./otherOptions.css"
+import {Link} from "react-router-dom";
 export default function OtherOptions(){
     
     return(
-        <section className="other-option">
+        <section className="other-options">
             <div>
-                <button>Settings</button>
+                <Link to={"/settings"}><button>Settings</button></Link>
                 <button>Not defined</button>
                 <button>Not defined</button>
                 <button>Logout</button>

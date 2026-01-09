@@ -1,14 +1,18 @@
 import SettingsLeft from "./settingsLeft";
-import SettingsRight from "./settingsRight";
+import { Outlet } from 'react-router-dom';
+import "./settings.css"
 
 export default function Settings() {
 
     return (
 
-        <>
-        
+        <section className="settings-page">
             <SettingsLeft />
-            <SettingsRight />
-        </>
+
+            <section className="settings-right">
+                <Outlet />
+            </section>
+
+        </section>
     )
 }

@@ -1,0 +1,25 @@
+.workspace-preview{
+    width: 250px;
+    height: 150px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 16px;
+    margin: 10px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    background-color: #f9f9f9;
+    cursor: pointer;
+    transition: box-shadow 0.3s ease;
+
+}
+.workspace-preview:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    border: 1px solid #350707;
+}
+
+.workspacePreview{
+    display: flex;
+    flex-direction: column;
+}
