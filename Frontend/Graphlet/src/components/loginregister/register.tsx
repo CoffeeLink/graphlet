@@ -30,8 +30,8 @@ export default function Register(){
     }
 
     return(
-        <section className="registersection">
-            <h1>Register</h1>
+        <section className="register-section fg">
+            <h1 >Register</h1>
             {success && <SuccessfulRegister />}
             <div>
                 <table className="registerForm">

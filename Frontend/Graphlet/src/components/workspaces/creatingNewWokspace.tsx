@@ -1,6 +1,6 @@
 import {useState} from "react";
 import {Tag} from "./tag.tsx";
-//import {CreateNewTag} from "./createNewTag.tsx";
+import {CreateNewTag} from "./createNewTag.tsx";
 
 interface CreatingNewProps {
     onClose?: () => void;
@@ -27,6 +27,13 @@ export default function CreatingNewWokspace({ onClose }: CreatingNewProps) {
         if (onClose) onClose();
     }
 
+    const [showCreateTag, setShowCreateTag] = useState(false);
+    function handleCreateNewTag() {
+        setShowCreateTag(perv => !perv);
+    }
+    function onCloseCreate() {
+        setShowCreateTag(false);
+    }
 
     return (
         <>
@@ -43,11 +50,12 @@ export default function CreatingNewWokspace({ onClose }: CreatingNewProps) {
                     <tr>
                         <td>Tags</td>
                         <td className={"tag-container"}>list of tags {tag}</td>
-                        <td><button >Create new tag</button></td>
+                        <td><button onClick={handleCreateNewTag}>Create new tag</button></td>
                     </tr>
                     </tbody>
                 </table>
                 <button onClick={handleCreateWorkspace}>Create</button>
+                {showCreateTag && <CreateNewTag onClose={onCloseCreate}/>}
             </div>
         </>
     );

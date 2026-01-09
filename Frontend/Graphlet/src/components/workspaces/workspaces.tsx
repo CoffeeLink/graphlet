@@ -28,7 +28,7 @@ export default function Workspaces() {
 
     return (
         <>
-            <div className="workspaces-page">
+            <div className="workspaces-page popup-bg">
                 <header>
                     <h2>My workspaces</h2>
                     <button type="button" onClick={handleCreateNewClick}>Create new</button>

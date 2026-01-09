@@ -1,10 +1,14 @@
-import {useState} from "react";
+import {useEffect, useState} from "react";
 
+interface CreatingNewProps {
+    onClose?: () => void;
+}
 
-export function CreateNewTag() {
+export function CreateNewTag({onClose}: CreatingNewProps) {
 
     const [color, setColor] = useState("gray");
     const [tagName, setTagName] = useState("tag");
+
 
     function handleCreateNewTag() {
         try {
@@ -18,9 +22,21 @@ export function CreateNewTag() {
         //TODO: show error message 
     }
 
+    useEffect(() => {
+        // async function createTag() {
+        //     const res = await fetch("http://localhost:5188/")
+        // }
+    }, []);
+
+    function handleClose(){
+        if (onClose) onClose();
+    }
     return (
         <div className={"create-new-tag"}>
+            <div>
             <h3>Create new tag</h3>
+                <button onClick={handleClose}>X</button>
+            </div>
             <table>
                 <tbody>
                 <tr>
