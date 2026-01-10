@@ -1,6 +1,6 @@
-import SettingsLeft from "./settingsLeft";
+import SettingsLeft from "../components/settings/settingsLeft.tsx";
 import { Outlet } from 'react-router-dom';
-import "./settings.css"
+import "../components/settings/settings.css"
 
 export default function Settings() {
 

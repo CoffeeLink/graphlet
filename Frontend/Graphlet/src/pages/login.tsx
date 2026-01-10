@@ -1,7 +1,7 @@
-import './login.css'
+import '../components/loginregister/login.css'
 import {useNavigate} from "react-router-dom";
 import { useState} from 'react';
-import SuccessfulLogin from './successfulLogin';
+import SuccessfulLogin from '../components/loginregister/successfulLogin.tsx';
 
 export default function Login(){
     const navigate = useNavigate();

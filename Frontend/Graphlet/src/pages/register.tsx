@@ -1,7 +1,7 @@
 import {useState} from "react";
 import {useNavigate} from "react-router-dom";
-import SuccessfulRegister from "./successfulRegister.tsx";
-import './login.css'
+import SuccessfulRegister from "../components/loginregister/successfulRegister.tsx";
+import '../components/loginregister/login.css'
 
 export default function Register(){
     const [loading, setLoading] = useState(false);
@@ -52,7 +52,7 @@ export default function Register(){
                             <td colSpan={2}><button onClick={register} disabled={loading}>{loading ? 'Working...' : 'Register'}</button></td>
                         </tr>
                         <tr>
-                            <td colSpan={2}><a href="/login">Already have an account? Login here!</a></td>
+                            <td colSpan={2}><a href="/Frontend/Graphlet/src/pages/login">Already have an account? Login here!</a></td>
                         </tr>
                     </tbody>
                 </table>

@@ -12,3 +12,12 @@
     gap: 20px;
     margin-top: 20px;
 }
+
+.workspaces-header{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.workspaces-header input{
+    border-radius: 5px;
+}

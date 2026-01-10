@@ -1,5 +1,5 @@
 import {useEffect, useState} from "react";
-
+import "./createNewTag.css"
 interface CreatingNewProps {
     onClose?: () => void;
 }
@@ -25,6 +25,11 @@ export function CreateNewTag({onClose}: CreatingNewProps) {
     useEffect(() => {
         // async function createTag() {
         //     const res = await fetch("http://localhost:5188/")
+        //
+        //     // if (res.status === 201) {
+        //     //     handleClose();
+        //     // } else {
+        //
         // }
     }, []);
 
@@ -33,9 +38,9 @@ export function CreateNewTag({onClose}: CreatingNewProps) {
     }
     return (
         <div className={"create-new-tag"}>
-            <div>
-            <h3>Create new tag</h3>
-                <button onClick={handleClose}>X</button>
+            <div className="header-row">
+                <h3 className={"header-title"}>Create new tag</h3>
+                <button className="header-close close-button" onClick={handleClose}>X</button>
             </div>
             <table>
                 <tbody>
@@ -54,7 +59,6 @@ export function CreateNewTag({onClose}: CreatingNewProps) {
                 </tr>
                 </tbody>
             </table>
-
         </div>
     );
 }

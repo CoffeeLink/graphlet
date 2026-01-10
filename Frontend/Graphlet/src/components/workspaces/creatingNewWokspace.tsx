@@ -1,3 +1,4 @@
+import "./createNewWorkspace.css"
 import {useState} from "react";
 import {Tag} from "./tag.tsx";
 import {CreateNewTag} from "./createNewTag.tsx";
@@ -37,10 +38,11 @@ export default function CreatingNewWokspace({ onClose }: CreatingNewProps) {
 
     return (
         <>
-            <div>
-                <h2>Create new workspace</h2>
-                <button aria-label="Close" onClick={handleClose}>X</button>
-                {/* close button */}
+            <div className={"creating-new-workspace fg"}>
+                <div className="header-row">
+                    <div className="header-title text">Create new workspace</div>
+                    <button className="header-close close-button" aria-label="Close" onClick={handleClose}>X</button>
+                </div>
                 <table>
                     <tbody>
                     <tr>
@@ -54,7 +56,7 @@ export default function CreatingNewWokspace({ onClose }: CreatingNewProps) {
                     </tr>
                     </tbody>
                 </table>
-                <button onClick={handleCreateWorkspace}>Create</button>
+                <button onClick={handleCreateWorkspace}>Create new Workspace</button>
                 {showCreateTag && <CreateNewTag onClose={onCloseCreate}/>}
             </div>
         </>

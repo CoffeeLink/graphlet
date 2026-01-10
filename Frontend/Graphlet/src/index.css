@@ -37,6 +37,8 @@
     --error-text-color :#ff5e5e;
 
     --url-color: #5156b6;
+
+    --border-color: #1a2c95;
 }
 
 a {
@@ -65,7 +67,7 @@ h1 {
 
 button {
   border-radius: 8px;
-  border: 1px solid transparent;
+  border: 1px solid black;
  padding: 0.6em 1.2em;
   font-size: 1em;
   font-weight: 500;
@@ -73,6 +75,7 @@ button {
 /*  background-color: #1a1a1a;*/
   cursor: pointer;
   transition: border-color 0.25s;
+    background-color: var(--button--color);
 }
 button:hover {
   border-color: #646cff;
@@ -97,7 +100,7 @@ button:focus-visible {
 
 
 
-h1, p, td{
+.text, h1, h2, h3, p, td{
   color: var(--text-color);
 }
 
@@ -111,4 +114,9 @@ h1, p, td{
 
 a{
     color: var(--url-color);
+}
+
+.close-button{
+  color: var(--text-color);
+  border: 1px solid var(--error-text-color);
 }
