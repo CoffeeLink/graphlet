@@ -16,6 +16,7 @@ export function CreateNewTag({onClose}: CreatingNewProps) {
             //TODO: send new tag to server
             //wait for 201
             console.log("Creating tag:", {tagName, color});
+
         } catch (err) {
             console.error("Error creating new tag:", err);
         }
@@ -46,11 +47,11 @@ export function CreateNewTag({onClose}: CreatingNewProps) {
                 <tbody>
                 <tr>
                     <td>Tag name:</td>
-                    <td><input type="text" value={tagName} onChange={e => setTagName(e.target.value)}/></td>
+                    <td><input type="text" id={"tagNameInput"} value={tagName} onChange={e => setTagName(e.target.value)}/></td>
                 </tr>
                 <tr>
                     <td>Tag color:</td>
-                    <td><input type="color" value={color} onChange={e => setColor(e.target.value)}/></td>
+                    <td><input type="color"  value={color} onChange={e => setColor(e.target.value)}/></td>
                 </tr>
                 <tr>
                     <td colSpan={2}>

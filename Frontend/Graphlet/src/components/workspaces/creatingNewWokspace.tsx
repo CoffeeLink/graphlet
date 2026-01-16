@@ -45,8 +45,8 @@ export default function CreatingNewWokspace({ onClose }: CreatingNewProps) {
                 </div>
                 <table>
                     <tbody>
-                    <tr>
-                        <td>Workspace name:</td>
+                    <tr >
+                        <td >Workspace name:</td>
                         <td><input type="text" id={"nameInput"} value={_name} onChange={(e) => setName(e.target.value)} /></td>
                     </tr>
                     <tr>
@@ -56,7 +56,7 @@ export default function CreatingNewWokspace({ onClose }: CreatingNewProps) {
                     </tr>
                     </tbody>
                 </table>
-                <button onClick={handleCreateWorkspace}>Create new Workspace</button>
+                <button onClick={handleCreateWorkspace} id={"create-new-workspace-button"}>Create new Workspace</button>
                 {showCreateTag && <CreateNewTag onClose={onCloseCreate}/>}
             </div>
         </>

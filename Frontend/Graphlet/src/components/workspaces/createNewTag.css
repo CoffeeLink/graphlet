@@ -3,12 +3,18 @@
     border: 2px solid var(--border-color);
     border-radius: 15px;
     margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.create-new-tag th, .create-new-tag td {
+    text-align: center;
+    vertical-align: middle;
 }
 
 .header-row {
-    display: flex;
     align-items: center;
-    justify-content: space-between;
     margin-bottom: 16px;
 }
 
@@ -22,7 +28,10 @@
 .header-close {
     margin-left: 16px;
     background: none;
-    border: none;
     font-size: 1.2em;
     cursor: pointer;
+}
+
+#tagNameInput{
+    margin-left: 10px;
 }
