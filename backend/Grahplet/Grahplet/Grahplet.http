@@ -2,6 +2,10 @@
 @baseUrl = http://localhost:5188
 @email = demo@example.com
 @password = demo
+@missingId = 00000000-0000-0000-0000-000000000001
+@newUsername = testuser_{{$timestamp}}
+@newEmail = testuser_{{$timestamp}}@example.com
+@newPassword = P@ssw0rd!
 
 ### Login
 POST {{baseUrl}}/api/login
@@ -13,12 +17,159 @@ Content-Type: application/json
 }
 
 > {%
+    client.test("Login succeeds with demo credentials", function () {
+        client.assert(response.status === 200, "Expected 200 OK");
+        client.assert(!!response.body.token, "Token should be present in body");
+    });
     client.global.set("token", response.body.token);
+%}
+
+### Register New User
+POST {{baseUrl}}/api/user/register
+Content-Type: application/json
+
+{
+  "name": "{{newUsername}}",
+  "email": "{{newEmail}}",
+  "password": "{{newPassword}}"
+}
+
+> {%
+    client.test("Register returns 201 Created or 409 Conflict if already exists", function () {
+        client.assert([201,409].includes(response.status), "Expected 201 or 409");
+    });
+%}
+
+### Login with New User
+POST {{baseUrl}}/api/login
+Content-Type: application/json
+
+{
+  "email": "{{newEmail}}",
+  "password": "{{newPassword}}"
+}
+
+> {%
+    client.test("Login as new user succeeds", function () {
+        client.assert(response.status === 200, "Expected 200 OK");
+        client.assert(!!response.body.token, "Token should be present");
+    });
+    client.global.set("token_new", response.body.token);
+%}
+
+### Get Current User (me)
+GET {{baseUrl}}/api/user/me
+Authorization: {{token_new}}
+
+> {%
+    client.test("Get current user returns 200 and has expected fields", function () {
+        client.assert(response.status === 200);
+        client.assert(!!response.body.id, "User id should be present");
+        client.assert(!!response.body.username, "Username should be present");
+        client.assert(response.body.password === "", "Password should be empty in response");
+    });
+    // Save current user's id for public fetch test
+    client.global.set("currentUserId", response.body.id);
+%}
+
+### Get Current User (me) - unauthorized → 401
+GET {{baseUrl}}/api/user/me
+
+> {%
+    client.test("/me requires auth", function () {
+        client.assert(response.status === 401);
+    });
+%}
+
+### Get Public User by Id (no auth required)
+GET {{baseUrl}}/api/user/{{currentUserId}}
+
+> {%
+    client.test("Public user endpoint returns 200 and PublicUser shape", function () {
+        client.assert(response.status === 200);
+        client.assert(!!response.body.id, "PublicUser id present");
+        client.assert(!!response.body.username, "PublicUser username present");
+        client.assert(response.body.profilePicUrl !== undefined, "PublicUser profilePicUrl present");
+        client.assert(response.body.password === undefined, "Password field must not be returned");
+        client.assert(response.body.email === undefined, "Email must not be returned in public profile");
+    });
+%}
+
+### Get Public User - not found → 404
+GET {{baseUrl}}/api/user/{{missingId}}
+
+> {%
+    client.test("Public user endpoint returns 404 for non-existing id", function () {
+        client.assert(response.status === 404);
+    });
+%}
+
+### Update Current User (me)
+PUT {{baseUrl}}/api/user/me
+Authorization: {{token_new}}
+Content-Type: application/json
+
+{
+  "profilePicUrl": "https://example.com/newpic/{{newUsername}}.png",
+  "username": "{{newUsername}}_updated"
+}
+
+> {%
+    client.test("Update current user returns 200 and updates fields", function () {
+        client.assert(response.status === 200);
+        client.assert(response.body.username.endsWith("_updated"), "Username should be updated");
+        client.assert(response.body.profilePicUrl.includes("newpic"), "ProfilePicUrl should be updated");
+    });
+%}
+
+### Login - invalid credentials → 401
+POST {{baseUrl}}/api/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "wrong-password"
+}
+
+> {%
+    client.test("Login fails with invalid credentials", function () {
+        client.assert(response.status === 401, "Expected 401 Unauthorized");
+    });
+%}
+
+### Login - bad request (missing password) → 400
+POST {{baseUrl}}/api/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}"
+}
+
+> {%
+    client.test("Login fails with bad request when password missing", function () {
+        client.assert(response.status === 400, "Expected 400 Bad Request");
+    });
 %}
 
 ### List Workspaces
 GET {{baseUrl}}/api/workspace
 Authorization: {{token}}
+
+> {%
+    client.test("List workspaces returns 200 with valid auth", function () {
+        client.assert(response.status === 200);
+        client.assert(Array.isArray(response.body), "Expected array of workspaces");
+    });
+%}
+
+### List Workspaces - unauthorized → 401
+GET {{baseUrl}}/api/workspace
+
+> {%
+    client.test("List workspaces requires auth", function () {
+        client.assert(response.status === 401);
+    });
+%}
 
 ### Create Workspace
 POST {{baseUrl}}/api/workspace
@@ -33,11 +184,35 @@ Content-Type: application/json
     if (response.status === 201) {
         client.global.set("workspaceId", response.body.id);
     }
+    client.test("Create workspace returns 201 and id", function () {
+        client.assert(response.status === 201);
+        client.assert(!!response.body.id, "Workspace id should be present");
+    });
+%}
+
+### Create Workspace - bad request (missing name) → 400
+POST {{baseUrl}}/api/workspace
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+}
+
+> {%
+    client.test("Create workspace fails with 400 when name missing", function () {
+        client.assert(response.status === 400);
+    });
 %}
 
 ### Get Workspace
 GET {{baseUrl}}/api/workspace/{{workspaceId}}
 Authorization: {{token}}
+
+> {%
+    client.test("Get workspace returns 200 for existing id", function () {
+        client.assert(response.status === 200);
+    });
+%}
 
 ### Update Workspace
 PUT {{baseUrl}}/api/workspace/{{workspaceId}}
@@ -47,6 +222,22 @@ Content-Type: application/json
 {
   "name": "Updated Workspace"
 }
+
+> {%
+    client.test("Update workspace returns 200 for existing id", function () {
+        client.assert(response.status === 200);
+    });
+%}
+
+### Get Workspace - not found → 404
+GET {{baseUrl}}/api/workspace/{{missingId}}
+Authorization: {{token}}
+
+> {%
+    client.test("Get workspace returns 404 for non-existing id", function () {
+        client.assert(response.status === 404);
+    });
+%}
 
 ### Create Tag
 POST {{baseUrl}}/api/workspace/{{workspaceId}}/tags
@@ -62,15 +253,32 @@ Content-Type: application/json
     if (response.status === 201) {
         client.global.set("tagId", response.body.id);
     }
+    client.test("Create tag returns 201 and id", function () {
+        client.assert(response.status === 201);
+        client.assert(!!response.body.id);
+    });
 %}
 
 ### List Tags
 GET {{baseUrl}}/api/workspace/{{workspaceId}}/tags
 Authorization: {{token}}
 
+> {%
+    client.test("List tags returns 200 and array", function () {
+        client.assert(response.status === 200);
+        client.assert(Array.isArray(response.body));
+    });
+%}
+
 ### Get Tag
 GET {{baseUrl}}/api/workspace/{{workspaceId}}/tags/{{tagId}}
 Authorization: {{token}}
+
+> {%
+    client.test("Get tag returns 200 for existing tag", function () {
+        client.assert(response.status === 200);
+    });
+%}
 
 ### Update Tag
 PUT {{baseUrl}}/api/workspace/{{workspaceId}}/tags/{{tagId}}
@@ -81,6 +289,38 @@ Content-Type: application/json
   "name": "Very Important",
   "color": [0, 255, 0]
 }
+
+> {%
+    client.test("Update tag returns 200 for existing tag", function () {
+        client.assert(response.status === 200);
+    });
+%}
+
+### Create Tag - bad request (invalid color) → 400
+POST {{baseUrl}}/api/workspace/{{workspaceId}}/tags
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "name": "Broken",
+  "color": [255, 0]
+}
+
+> {%
+    client.test("Create tag fails with 400 on invalid color", function () {
+        client.assert(response.status === 400);
+    });
+%}
+
+### Get Tag - not found → 404
+GET {{baseUrl}}/api/workspace/{{workspaceId}}/tags/{{missingId}}
+Authorization: {{token}}
+
+> {%
+    client.test("Get tag returns 404 for non-existing tag", function () {
+        client.assert(response.status === 404);
+    });
+%}
 
 ### Create Note (Text)
 POST {{baseUrl}}/api/note
@@ -97,6 +337,10 @@ Content-Type: application/json
     if (response.status === 201) {
         client.global.set("noteId", response.body.id);
     }
+    client.test("Create note (txt) returns 201 and id", function () {
+        client.assert(response.status === 201);
+        client.assert(!!response.body.id);
+    });
 %}
 
 ### Create Note (URL)
@@ -114,15 +358,32 @@ Content-Type: application/json
     if (response.status === 201) {
         client.global.set("noteId2", response.body.id);
     }
+    client.test("Create note (url) returns 201 and id", function () {
+        client.assert(response.status === 201);
+        client.assert(!!response.body.id);
+    });
 %}
 
 ### List Notes
 GET {{baseUrl}}/api/note
 Authorization: {{token}}
 
+> {%
+    client.test("List notes returns 200 and array", function () {
+        client.assert(response.status === 200);
+        client.assert(Array.isArray(response.body));
+    });
+%}
+
 ### Get Note
 GET {{baseUrl}}/api/note/{{noteId}}
 Authorization: {{token}}
+
+> {%
+    client.test("Get note returns 200 for existing note", function () {
+        client.assert(response.status === 200);
+    });
+%}
 
 ### Update Note
 PUT {{baseUrl}}/api/note/{{noteId}}
@@ -134,13 +395,55 @@ Content-Type: application/json
   "value": "Updated content"
 }
 
+> {%
+    client.test("Update note returns 200 for existing note", function () {
+        client.assert(response.status === 200);
+    });
+%}
+
+### Create Note - bad request (missing name/kind) → 400
+POST {{baseUrl}}/api/note
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+}
+
+> {%
+    client.test("Create note fails with 400 when required fields missing", function () {
+        client.assert(response.status === 400);
+    });
+%}
+
+### Get Note - not found → 404
+GET {{baseUrl}}/api/note/{{missingId}}
+Authorization: {{token}}
+
+> {%
+    client.test("Get note returns 404 for non-existing note", function () {
+        client.assert(response.status === 404);
+    });
+%}
+
 ### Attach Tag to Note
 PUT {{baseUrl}}/api/note/{{noteId}}/tags/{{tagId}}
 Authorization: {{token}}
 
+> {%
+    client.test("Attach tag returns 200 and note payload", function () {
+        client.assert(response.status === 200);
+    });
+%}
+
 ### Get Note-Tag Association
 GET {{baseUrl}}/api/note/{{noteId}}/tags/{{tagId}}
 Authorization: {{token}}
+
+> {%
+    client.test("Get note-tag association returns 200", function () {
+        client.assert(response.status === 200);
+    });
+%}
 
 ### Create Note Relation
 POST {{baseUrl}}/api/note/{{noteId}}/relation
@@ -156,11 +459,21 @@ Content-Type: application/json
     if (response.status === 201) {
         client.global.set("relationId", response.body.id);
     }
+    client.test("Create relation returns 201 and id", function () {
+        client.assert(response.status === 201);
+        client.assert(!!response.body.id);
+    });
 %}
 
 ### Get Note Relation
 GET {{baseUrl}}/api/note/{{noteId}}/relation/{{relationId}}
 Authorization: {{token}}
+
+> {%
+    client.test("Get relation returns 200", function () {
+        client.assert(response.status === 200);
+    });
+%}
 
 ### Update Relation
 PUT {{baseUrl}}/api/note/{{noteId}}/relation/{{relationId}}
@@ -171,27 +484,113 @@ Content-Type: application/json
   "name": "strongly_references"
 }
 
+> {%
+    client.test("Update relation returns 200", function () {
+        client.assert(response.status === 200);
+    });
+%}
+
+### Create Relation - bad request (missing fields) → 400
+POST {{baseUrl}}/api/note/{{noteId}}/relation
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "name": ""
+}
+
+> {%
+    client.test("Create relation fails with 400 when fields missing/invalid", function () {
+        client.assert(response.status === 400);
+    });
+%}
+
+### Get Relation - not found → 404
+GET {{baseUrl}}/api/note/{{noteId}}/relation/{{missingId}}
+Authorization: {{token}}
+
+> {%
+    client.test("Get relation returns 404 for non-existing relation", function () {
+        client.assert(response.status === 404);
+    });
+%}
+
 ### Detach Tag from Note
 DELETE {{baseUrl}}/api/note/{{noteId}}/tags/{{tagId}}
 Authorization: {{token}}
+
+> {%
+    client.test("Detach tag returns 204", function () {
+        client.assert(response.status === 204);
+    });
+%}
 
 ### Delete Note Relation
 DELETE {{baseUrl}}/api/note/{{noteId}}/relation/{{relationId}}
 Authorization: {{token}}
 
+> {%
+    client.test("Delete relation returns 204", function () {
+        client.assert(response.status === 204);
+    });
+%}
+
 ### Delete Note
 DELETE {{baseUrl}}/api/note/{{noteId}}
 Authorization: {{token}}
+
+> {%
+    client.test("Delete note returns 204", function () {
+        client.assert(response.status === 204);
+    });
+%}
 
 ### Delete Tag
 DELETE {{baseUrl}}/api/workspace/{{workspaceId}}/tags/{{tagId}}
 Authorization: {{token}}
 
+> {%
+    client.test("Delete tag returns 204", function () {
+        client.assert(response.status === 204);
+    });
+%}
+
 ### Delete Workspace
 DELETE {{baseUrl}}/api/workspace/{{workspaceId}}
 Authorization: {{token}}
 
+> {%
+    client.test("Delete workspace returns 204", function () {
+        client.assert(response.status === 204);
+    });
+%}
+
 ### Logout
 POST {{baseUrl}}/api/logout
 Authorization: {{token}}
+
+> {%
+    client.test("Logout succeeds with 200", function () {
+        client.assert(response.status === 200);
+    });
+%}
+
+### Logout - missing header → 401
+POST {{baseUrl}}/api/logout
+
+> {%
+    client.test("Logout requires Authorization header", function () {
+        client.assert(response.status === 401);
+    });
+%}
+
+### Logout - invalid token → 401
+POST {{baseUrl}}/api/logout
+Authorization: invalid-token
+
+> {%
+    client.test("Logout fails with invalid token", function () {
+        client.assert(response.status === 401);
+    });
+%}
 

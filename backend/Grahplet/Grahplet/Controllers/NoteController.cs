@@ -10,12 +10,10 @@ namespace Grahplet.Controllers;
 public class NoteController : ControllerBase
 {
     private readonly INoteRepository _noteRepository;
-    private readonly INoteRelationRepository _relationRepository;
 
-    public NoteController(INoteRepository noteRepository, INoteRelationRepository relationRepository)
+    public NoteController(INoteRepository noteRepository)
     {
         _noteRepository = noteRepository;
-        _relationRepository = relationRepository;
     }
 
     private IActionResult RequireAuth()
@@ -175,7 +173,7 @@ public class NoteController : ControllerBase
         }
 
         var userId = HttpContext.GetRequiredUserId();
-        var relation = await _relationRepository.CreateRelationAsync(userId, noteId, request);
+        var relation = await _noteRepository.CreateRelationAsync(userId, noteId, request);
         return CreatedAtAction(nameof(GetRelation), new { noteId, relationId = relation.Id }, relation);
     }
 
@@ -186,7 +184,7 @@ public class NoteController : ControllerBase
         if (authCheck != null) return authCheck;
 
         var userId = HttpContext.GetRequiredUserId();
-        var relation = await _relationRepository.GetRelationAsync(userId, noteId, relationId);
+        var relation = await _noteRepository.GetRelationAsync(userId, noteId, relationId);
         
         if (relation == null)
         {
@@ -203,7 +201,7 @@ public class NoteController : ControllerBase
         if (authCheck != null) return authCheck;
 
         var userId = HttpContext.GetRequiredUserId();
-        var relation = await _relationRepository.UpdateRelationAsync(userId, noteId, relationId, request);
+        var relation = await _noteRepository.UpdateRelationAsync(userId, noteId, relationId, request);
         
         if (relation == null)
         {
@@ -220,7 +218,7 @@ public class NoteController : ControllerBase
         if (authCheck != null) return authCheck;
 
         var userId = HttpContext.GetRequiredUserId();
-        var success = await _relationRepository.DeleteRelationAsync(userId, noteId, relationId);
+        var success = await _noteRepository.DeleteRelationAsync(userId, noteId, relationId);
         
         if (!success)
         {

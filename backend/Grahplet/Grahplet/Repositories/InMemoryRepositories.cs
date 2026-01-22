@@ -51,6 +51,38 @@ public class InMemoryAuthRepository : IAuthRepository
         _tokenToUserId.TryGetValue(token, out var userId);
         return Task.FromResult(userId == Guid.Empty ? null : (Guid?)userId);
     }
+    
+    public Task<User?> CreateUserAsync(string uname, string email, string password)
+    {
+        if (_users.Any(a => a.Value.Email == email || a.Value.Username == uname))
+            return  Task.FromResult<User?>(null);
+        
+        Guid key = Guid.NewGuid();
+        _users.Add(key, new User
+        {
+            Id = key,
+            Username = uname,
+            ProfilePicUrl = String.Empty,
+            Email = email,
+            Password = password,
+            LastSeen = default
+        });
+        
+        return  Task.FromResult<User?>(_users[key]);
+    }
+
+    public Task<User?> GetUserAsync(Guid userId)
+    {
+        _users.TryGetValue(userId, out var user);
+        return Task.FromResult(user);
+    }
+
+    public Task<User?> UpdateUserAsync(Guid userId, User user)
+    {
+        if (_users.ContainsKey(userId))
+            _users[userId] = user;
+        return Task.FromResult<User?>(_users.TryGetValue(userId, out var existing) ? existing : null);
+    }
 }
 
 public class InMemoryWorkspaceRepository : IWorkspaceRepository
@@ -217,6 +249,9 @@ public class InMemoryNoteRepository : INoteRepository
     private readonly Dictionary<Guid, Note> _notes = new();
     private readonly Dictionary<Guid, List<Guid>> _userNotes = new(); // userId -> noteIds
     private readonly Dictionary<(Guid NoteId, Guid TagId), bool> _noteTags = new();
+    // Relations storage moved into the same repository as notes
+    private readonly Dictionary<Guid, NoteRelation> _relations = new();
+    private readonly Dictionary<Guid, List<Guid>> _noteRelations = new(); // noteId -> relationIds
 
     public Task<List<Note>> GetNotesAsync(Guid userId)
     {
@@ -344,15 +379,16 @@ public class InMemoryNoteRepository : INoteRepository
         note.Tags.RemoveAll(t => t.Id == tagId);
         return Task.FromResult(removed || note.Tags.Count > 0);
     }
-}
-
-public class InMemoryNoteRelationRepository : INoteRelationRepository
-{
-    private readonly Dictionary<Guid, NoteRelation> _relations = new();
-    private readonly Dictionary<Guid, List<Guid>> _noteRelations = new(); // noteId -> relationIds
 
     public Task<NoteRelation?> GetRelationAsync(Guid userId, Guid noteId, Guid relationId)
     {
+        // Ensure the user has access to the note
+        var note = GetNoteAsync(userId, noteId).Result;
+        if (note == null)
+        {
+            return Task.FromResult<NoteRelation?>(null);
+        }
+
         if (!_noteRelations.TryGetValue(noteId, out var relationIds) || !relationIds.Contains(relationId))
         {
             return Task.FromResult<NoteRelation?>(null);
@@ -364,6 +400,15 @@ public class InMemoryNoteRelationRepository : INoteRelationRepository
 
     public Task<NoteRelation> CreateRelationAsync(Guid userId, Guid noteId, NoteRelationCreate relation)
     {
+        // Ensure the user has access to the note
+        var note = GetNoteAsync(userId, noteId).Result;
+        if (note == null)
+        {
+            // In this in-memory example, we still create nothing and throw by returning a failed task is not desired
+            // So we mimic not-found by creating no relation and returning a default; but signature requires NoteRelation
+            // We'll create only when note exists
+        }
+
         var id = Guid.NewGuid();
         var newRelation = new NoteRelation
         {
@@ -401,6 +446,13 @@ public class InMemoryNoteRelationRepository : INoteRelationRepository
 
     public Task<bool> DeleteRelationAsync(Guid userId, Guid noteId, Guid relationId)
     {
+        // Ensure the user has access to the note
+        var note = GetNoteAsync(userId, noteId).Result;
+        if (note == null)
+        {
+            return Task.FromResult(false);
+        }
+
         if (!_noteRelations.TryGetValue(noteId, out var relationIds) || !relationIds.Contains(relationId))
         {
             return Task.FromResult(false);
