@@ -1,42 +1,50 @@
-import {useEffect, useState} from "react";
+import { useState} from "react";
 import "./createNewTag.css"
+import "../error/errorComponent.tsx"
+import {ErrorComponent} from "../error/errorComponent.tsx";
+
 interface CreatingNewProps {
     onClose?: () => void;
 }
 
 export function CreateNewTag({onClose}: CreatingNewProps) {
-
+    const [error, setError] = useState(false);
     const [color, setColor] = useState("gray");
     const [tagName, setTagName] = useState("tag");
 
+    function handleClose(){
+        if (onClose) onClose();
+    }
 
-    function handleCreateNewTag() {
+    async function handleCreateNewTag() {
+        setError(false);
         try {
-            // Here you can send the tagName and color to the server
-            //TODO: send new tag to server
-            //wait for 201
+            const rawRes = await fetch("http://localhost:5188/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    name: tagName,
+                    color: color
+                })
+            })
+            if (rawRes.status === 201) {
+                handleClose();
+                //gettags in the parent component
+            }
+            else {
+                console.error("Failed to create tag, status code:", rawRes.status);
+            }
             console.log("Creating tag:", {tagName, color});
 
         } catch (err) {
             console.error("Error creating new tag:", err);
         }
-        //TODO: show error message 
+        //TODO: show error message
     }
 
-    useEffect(() => {
-        // async function createTag() {
-        //     const res = await fetch("http://localhost:5188/")
-        //
-        //     // if (res.status === 201) {
-        //     //     handleClose();
-        //     // } else {
-        //
-        // }
-    }, []);
 
-    function handleClose(){
-        if (onClose) onClose();
-    }
     return (
         <div className={"create-new-tag"}>
             <div className="header-row">
@@ -52,6 +60,9 @@ export function CreateNewTag({onClose}: CreatingNewProps) {
                 <tr>
                     <td>Tag color:</td>
                     <td><input type="color"  value={color} onChange={e => setColor(e.target.value)}/></td>
+                </tr>
+                <tr>
+                    <td colSpan={2}>{error && <ErrorComponent error={"An error occurred during creating tag."}/>}</td>
                 </tr>
                 <tr>
                     <td colSpan={2}>

@@ -120,3 +120,7 @@ a{
   color: var(--text-color);
   border: 1px solid var(--error-text-color);
 }
+
+.backbutton{
+    color: var();
+}

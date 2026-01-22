@@ -9,19 +9,12 @@ interface CreatingNewProps {
 
 export default function CreatingNewWokspace({ onClose }: CreatingNewProps) {
 
-    // function getTags(){
-    //     //TODO: fetch tags from server
-    //
-    // }
-
     const tag = <Tag text="Aasd" color="blue" />;
     console.log(tag);
 
-    const [_name, setName] = useState('')
-    function handleCreateWorkspace(){
-        console.log(_name);
-        //todo send workspace creation request to server
-        //if returns success, redirect to workspaces page
+    const [workspaceName, setWorkspaceName] = useState('')
+    async function handleCreateWorkspace(){
+        console.log(workspaceName);
     }
 
     function handleClose(){
@@ -34,6 +27,18 @@ export default function CreatingNewWokspace({ onClose }: CreatingNewProps) {
     }
     function onCloseCreate() {
         setShowCreateTag(false);
+        getTags();
+    }
+
+    async function getTags(){
+       //kell endpoint
+       //  const rawres = await fetch("http://localhost:5188/api/userTags", {
+       //      method: "GET",
+       //      headers: {
+       //
+       //      }
+       //  })
+
     }
 
     return (
@@ -47,11 +52,11 @@ export default function CreatingNewWokspace({ onClose }: CreatingNewProps) {
                     <tbody>
                     <tr >
                         <td >Workspace name:</td>
-                        <td><input type="text" id={"nameInput"} value={_name} onChange={(e) => setName(e.target.value)} /></td>
+                        <td><input type="text" id={"nameInput"} value={workspaceName} onChange={(e) => setWorkspaceName(e.target.value)} /></td>
                     </tr>
                     <tr>
                         <td>Tags</td>
-                        <td className={"tag-container"}>list of tags {tag}</td>
+                        <td className={"tag-container"}>  </td>
                         <td><button onClick={handleCreateNewTag}>Create new tag</button></td>
                     </tr>
                     </tbody>

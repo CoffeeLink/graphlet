@@ -36,10 +36,7 @@ export default function Register() {
         console.log(res + "nice")
 
         setLoading(true);
-
-        // On successful response: show success immediately, then redirect after a delay
         setSuccess(true);
-        setLoading(false);
 
         setTimeout(() => {
             navigate('/login');
