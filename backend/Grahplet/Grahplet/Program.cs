@@ -1,31 +1,81 @@
 using Grahplet.Repositories;
 using Grahplet.Middleware;
+using Grahplet;
+using Grahplet.WebSockets;
+using Grahplet.Data;
+using Microsoft.EntityFrameworkCore;
+using Grahplet.Security;
+using Microsoft.Data.Sqlite;
 
 var builder = WebApplication.CreateBuilder(args);
+Configuration.LoadFromConfiguration(builder.Configuration);
 
-// Add services to the container
-builder.Services.AddScoped<IAuthRepository, InMemoryAuthRepository>();
-builder.Services.AddScoped<IWorkspaceRepository, InMemoryWorkspaceRepository>();
-builder.Services.AddScoped<ITagRepository, InMemoryTagRepository>();
-builder.Services.AddScoped<INoteRepository, InMemoryNoteRepository>();
-builder.Services.AddScoped<INoteRelationRepository, InMemoryNoteRelationRepository>();
+// Database (SQLite by default)
+var connStr = builder.Configuration["Database:ConnectionString"];
+if (string.IsNullOrWhiteSpace(connStr))
+{
+    // fallback to local file
+    connStr = "Data Source=grahplet.db";
+}
 
+builder.Services.AddDbContext<GrahpletDbContext>(options => options.UseSqlite(connStr));
+
+// Repositories (EF-backed)
+builder.Services.AddScoped<IAuthRepository, EfAuthRepository>();
+builder.Services.AddScoped<IWorkspaceRepository, EfWorkspaceRepository>();
+builder.Services.AddScoped<ITagRepository, EfTagRepository>();
+builder.Services.AddScoped<INoteRepository, EfNoteRepository>();
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
+builder.Services.AddSingleton<EventsHandler>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<GrahpletDbContext>();
+    db.Database.EnsureCreated();
+    if (!db.Users.Any())
+    {
+        db.Users.Add(new DbUser
+        {
+            Id = Guid.NewGuid(),
+            Username = "demo",
+            Email = "demo@example.com",
+            PasswordHash = PasswordHasher.Hash("demo"),
+            ProfilePicUrl = "https://example.com/pic.jpg",
+            LastSeen = DateTime.UtcNow
+        });
+        db.SaveChanges();
+    }
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
 
 app.UseHttpsRedirection();
-
-// Custom authentication middleware
 app.UseCustomAuthentication();
 
+app.UseWebSockets(new WebSocketOptions
+{
+    KeepAliveInterval = TimeSpan.FromSeconds(30)
+});
+
+app.Map("/ws/event", async context =>
+{
+    if (context.WebSockets.IsWebSocketRequest)
+    {
+        using var socket = await context.WebSockets.AcceptWebSocketAsync();
+        var hub = context.RequestServices.GetRequiredService<EventsHandler>();
+        await hub.HandleAsync(context, socket);
+    }
+    else
+    {
+        context.Response.StatusCode = StatusCodes.Status400BadRequest;
+    }
+});
 app.MapControllers();
 
 app.Run();

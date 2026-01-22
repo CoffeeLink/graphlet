@@ -8,6 +8,12 @@ public interface IAuthRepository
     Task LogoutAsync(string token);
     Task<bool> ValidateTokenAsync(string token);
     Task<Guid?> GetUserIdFromTokenAsync(string token);
+    
+    // Identity stuff
+    
+    Task<User?> CreateUserAsync(string uname, string email, string password);
+    Task<User?> GetUserAsync(Guid userId);
+    Task<User?> UpdateUserAsync(Guid userId, User user);
 }
 
 public interface IWorkspaceRepository
@@ -37,10 +43,7 @@ public interface INoteRepository
     Task<bool> DeleteNoteAsync(Guid userId, Guid noteId);
     Task<Note?> AttachTagToNoteAsync(Guid userId, Guid noteId, Guid tagId);
     Task<bool> DetachTagFromNoteAsync(Guid userId, Guid noteId, Guid tagId);
-}
-
-public interface INoteRelationRepository
-{
+    // Relations are managed via the same repository as notes
     Task<NoteRelation?> GetRelationAsync(Guid userId, Guid noteId, Guid relationId);
     Task<NoteRelation> CreateRelationAsync(Guid userId, Guid noteId, NoteRelationCreate relation);
     Task<NoteRelation?> UpdateRelationAsync(Guid userId, Guid noteId, Guid relationId, NoteRelationUpdate relation);
