@@ -2,20 +2,25 @@ import '../components/loginregister/login.css'
 import {useNavigate} from "react-router-dom";
 import { useState} from 'react';
 import SuccessfulLogin from '../components/loginregister/successfulLogin.tsx';
+import {ErrorComponent} from "../components/error/errorComponent.tsx";
 
 export default function Login(){
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
-
+    const [error, setError] = useState(false);
 
 
     async function login(){
         const emailInput = document.querySelector(".usernameInput") as HTMLInputElement | null;
         const passwordInput = document.querySelector(".passwordInput") as HTMLInputElement | null;
-
-        if(!emailInput || !passwordInput) return;
-        const rawRes = await fetch("http://localhost:5188/api/login",{
+        setError(false);
+        if(!emailInput?.value || !passwordInput?.value ) {
+            setError(true);
+            console.log(error);
+            return;
+        }
+        const rawRes = await fetch("http://localhost:5188/api/login", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -26,15 +31,13 @@ export default function Login(){
             })
         })
             const res = await rawRes.json();
+            console.log(res+"nice")
 
         //TODO if backend returns success
         console.log(emailInput.value, passwordInput.value);
-        console.log(res)
 
          setLoading(true);
-         // simulate success
          setSuccess(true);
-         setLoading(false);
 
          setTimeout(() => {
              navigate("/workspaces");
@@ -56,6 +59,7 @@ export default function Login(){
                             <td>Password: </td>
                             <td><input type="password" className="passwordInput" required /></td>
                         </tr>
+                        {error && <ErrorComponent error={"Hiba van, itt valami nem jó!"}/>}
                         <tr>
                             <td colSpan={2}><button onClick={login} disabled={loading}>{loading ? 'Working...' : 'Login'}</button></td>
                         </tr>
