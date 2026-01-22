@@ -28,6 +28,16 @@ builder.Services.AddScoped<INoteRepository, EfNoteRepository>();
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddSingleton<EventsHandler>();
+// CORS: Permissive policy to allow cross-origin requests
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Permissive", policy =>
+        policy
+            .AllowAnyOrigin()
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+    );
+});
 
 var app = builder.Build();
 
@@ -55,8 +65,11 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 app.UseCustomAuthentication();
+
+// Enable CORS before mapping endpoints
+app.UseCors("Permissive");
 
 app.UseWebSockets(new WebSocketOptions
 {
