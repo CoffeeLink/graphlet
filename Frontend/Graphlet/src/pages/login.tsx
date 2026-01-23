@@ -61,10 +61,10 @@ export default function Login(){
                         </tr>
                         {error && <ErrorComponent error={"Hiba van, itt valami nem jó!"}/>}
                         <tr>
-                            <td colSpan={2}><button onClick={login} disabled={loading}>{loading ? 'Working...' : 'Login'}</button></td>
+                            <td colSpan={2}><button onClick={login} disabled={loading} id={"loginButton"}>{loading ? 'Working...' : 'Login'}</button></td>
                         </tr>
                         <tr>
-                            <td colSpan={2}><a href="/register">Don't have an account? Register here!</a></td>
+                            <td colSpan={2}><a href="/register" id={"registerLink"}>Don't have an account? Register here!</a></td>
                         </tr>
                     </tbody>
                 </table>

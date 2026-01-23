@@ -4,3 +4,5 @@
 obj
 
 Frontend/node-modules/
+Frontend/Graphlet-frontend-tester/bin/
+Frontend/Graphlet-frontend-tester/obj/
