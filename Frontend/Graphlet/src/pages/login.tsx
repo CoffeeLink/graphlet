@@ -2,7 +2,6 @@ import '../components/loginregister/login.css'
 import {useNavigate} from "react-router-dom";
 import { useState} from 'react';
 import SuccessfulLogin from '../components/loginregister/successfulLogin.tsx';
-import {ErrorComponent} from "../components/error/errorComponent.tsx";
 
 export default function Login(){
     const navigate = useNavigate();
@@ -30,14 +29,20 @@ export default function Login(){
                 password: passwordInput.value
             })
         })
-            const res = await rawRes.json();
-            console.log(res+"nice")
+        const res = await rawRes.json();
 
-        //TODO if backend returns success
-        console.log(emailInput.value, passwordInput.value);
+        //console.log(emailInput.value, passwordInput.value);
+        let token ="";
+        if(res.status === 200){
+             token= res.token;
+             localStorage.setItem("token", token);
+        }
+
 
          setLoading(true);
+         // simulate success
          setSuccess(true);
+         setLoading(false);
 
          setTimeout(() => {
              navigate("/workspaces");
@@ -59,12 +64,11 @@ export default function Login(){
                             <td>Password: </td>
                             <td><input type="password" className="passwordInput" required /></td>
                         </tr>
-                        {error && <ErrorComponent error={"Hiba van, itt valami nem jó!"}/>}
                         <tr>
-                            <td colSpan={2}><button onClick={login} disabled={loading} id={"loginButton"}>{loading ? 'Working...' : 'Login'}</button></td>
+                            <td colSpan={2}><button onClick={login} disabled={loading}>{loading ? 'Working...' : 'Login'}</button></td>
                         </tr>
                         <tr>
-                            <td colSpan={2}><a href="/register" id={"registerLink"}>Don't have an account? Register here!</a></td>
+                            <td colSpan={2}><a href="/register">Don't have an account? Register here!</a></td>
                         </tr>
                     </tbody>
                 </table>
