@@ -2,6 +2,7 @@ import '../components/loginregister/login.css'
 import {useNavigate} from "react-router-dom";
 import { useState} from 'react';
 import SuccessfulLogin from '../components/loginregister/successfulLogin.tsx';
+import {ErrorComponent} from "../components/error/errorComponent.tsx";
 
 export default function Login(){
     const navigate = useNavigate();
@@ -37,12 +38,15 @@ export default function Login(){
              token= res.token;
              localStorage.setItem("token", token);
         }
+        if(res.status == 401){
+            setError(true);
+            return;
+        }
 
 
          setLoading(true);
          // simulate success
          setSuccess(true);
-         setLoading(false);
 
          setTimeout(() => {
              navigate("/workspaces");
@@ -64,6 +68,7 @@ export default function Login(){
                             <td>Password: </td>
                             <td><input type="password" className="passwordInput" required /></td>
                         </tr>
+                        {error && <ErrorComponent error={"Hiba van, itt valami nem jó!"}/>}
                         <tr>
                             <td colSpan={2}><button onClick={login} disabled={loading}>{loading ? 'Working...' : 'Login'}</button></td>
                         </tr>
