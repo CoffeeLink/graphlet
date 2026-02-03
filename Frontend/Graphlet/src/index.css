@@ -124,3 +124,8 @@ a{
 .backbutton{
     color: var();
 }
+
+.error-text{
+    color: var(--error-text-color);
+    text-decoration: underline;
+}

@@ -5,6 +5,8 @@ import SuccessfulLogin from '../components/loginregister/successfulLogin.tsx';
 import {ErrorComponent} from "../components/error/errorComponent.tsx";
 
 export default function Login(){
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
@@ -18,6 +20,11 @@ export default function Login(){
         if(!emailInput?.value || !passwordInput?.value ) {
             setError(true);
             console.log(error);
+            return;
+        }
+        if(!emailRegex.test(emailInput.value)){
+            setError(true);
+            console.log("Invalid email format");
             return;
         }
         const rawRes = await fetch("http://localhost:5188/api/login", {
@@ -37,10 +44,8 @@ export default function Login(){
         if(res.status === 200){
              token= res.token;
              localStorage.setItem("token", token);
-        }
-        if(res.status == 401){
+        }else{
             setError(true);
-            return;
         }
 
 
@@ -68,7 +73,7 @@ export default function Login(){
                             <td>Password: </td>
                             <td><input type="password" className="passwordInput" required /></td>
                         </tr>
-                        {error && <ErrorComponent error={"Hiba van, itt valami nem jó!"}/>}
+                        {error && <ErrorComponent error={"Wrong email or password!"}/>}
                         <tr>
                             <td colSpan={2}><button onClick={login} disabled={loading}>{loading ? 'Working...' : 'Login'}</button></td>
                         </tr>

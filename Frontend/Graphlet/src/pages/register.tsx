@@ -9,6 +9,8 @@ export default function Register() {
     const [success, setSuccess] = useState(false);
     const navigate = useNavigate();
     const [error, setError] = useState(false);
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    const [errormsg, setErrormsg] = useState("");
 
     async function registerUser() {
         const emailInput = document.querySelector(".emailInput") as HTMLInputElement | null;
@@ -21,26 +23,37 @@ export default function Register() {
             console.log(error);
             return;
         }
-        const rawRes = await fetch("http://localhost:5188/api/user/register", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                name: usernameInput.value,
-                email: emailInput.value,
-                password: passwordInput.value
+        if (!emailRegex.test(emailInput.value)) {
+            setError(true);
+            console.log("Invalid email format");
+            return;
+        }
+        try {
+            const rawRes = await fetch("http://localhost:5188/api/user/register", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    name: usernameInput.value,
+                    email: emailInput.value,
+                    password: passwordInput.value
+                })
             })
-        })
-        const res = await rawRes.json();
-        console.log(res + "nice")
+            const res = await rawRes.json();
+            console.log(res + "nice")
 
-        setLoading(true);
-        setSuccess(true);
+            setLoading(true);
+            setSuccess(true);
 
-        setTimeout(() => {
-            navigate('/login');
-        }, 1000);
+            setTimeout(() => {
+                navigate('/login');
+            }, 1000);
+        }
+        catch {
+            setError(true);
+            setErrormsg("Registration failed. Please try again.");
+        }
     }
 
     return (
@@ -62,7 +75,7 @@ export default function Register() {
                         <td>Password:</td>
                         <td><input type="password" className="passwordInput" required/></td>
                     </tr>
-                    {error && <ErrorComponent error={"Hiba van, itt valami nem jó!"}/>}
+                    {error && <ErrorComponent error={errormsg}/>}
                     <tr>
                         <td colSpan={2}>
                             <button onClick={registerUser}
