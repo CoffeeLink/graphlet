@@ -3,10 +3,18 @@ import OtherOptions from "../components/workspaces/otherOptions.tsx";
 import {useState} from "react";
 import WorkspacePreview from "../components/workspaces/workspacePrewiev.tsx";
 import CreatingNewWokspace from "../components/workspaces/creatingNewWokspace.tsx";
-
+import {getWorkspaces} from "../components/workspaces/getWorkspaces.tsx";
+import {Workspace} from "../components/classes/workspace.tsx"
 
 export default function Workspaces() {
-    //tokencheck
+    const [workspaces, setWorkspaces] = useState<Workspace>(new Workspace(null, "", new Date()));
+    setTimeout(
+        async () => {
+            const w = await getWorkspaces();
+            if (w !== undefined && w !== null) setWorkspaces(w);
+        },
+        100
+    )
 
     const [showOtherOptions, setShowOtherOptions] = useState(false);
 
@@ -23,10 +31,7 @@ export default function Workspaces() {
         setShowCreatingNew(false);
     }
 
-    // function getWorkspaces(){
-    //     //TODO fetch workspaces from backend
-    //
-    // }
+
 
     return (
         <>
@@ -39,10 +44,13 @@ export default function Workspaces() {
                     {showOtherOptions && <OtherOptions/>}
                 </header>
                 <main>
-                    <WorkspacePreview/>
-                    <WorkspacePreview/>
-                    <WorkspacePreview/>
-                    {showCreatingNew && <CreatingNewWokspace onClose={handleCloseCreatingNew} />}
+                    <div className="workspaces-container">
+                        {Object.keys(workspaces).length === 0 && <p>No workspaces found. Create a new workspace to get started!</p>}
+                        {Object.entries(workspaces).map(([id, workspace]) => (
+                            <WorkspacePreview key={id} id={id} name={workspace.name} createdAt={workspace.createdAt} />
+                        ))}
+                    </div>
+                    {showCreatingNew && <CreatingNewWokspace onClose={handleCloseCreatingNew}  />}
                 </main>
             </div>
         </>

@@ -1,17 +1,20 @@
 
 services:
-    frontend:
-      build:
-        context: ./Frontend
-        dockerfile: Dockerfile
-      ports:
-        - "5173:5173"
-      image: frontend-image:latest
+  backend:
+    build:
+      context: ./backend/Grahplet/Grahplet
+      dockerfile: Dockerfile
+    ports:
+      - "5188:5188"
+    image: backend-image:latest
+    environment:
+      - ASPNETCORE_URLS=http://+:5188
 
-    backend:
-      build:
-        context: ./backend/Grahplet/Grahplet
-        dockerfile: Dockerfile
-      ports:
-        - "5188:5188"
-      image: backend-image:latest
+  frontend:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    image: frontend-image:latest
+

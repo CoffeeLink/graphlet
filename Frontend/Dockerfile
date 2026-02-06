@@ -1,13 +1,17 @@
 FROM node:22-alpine
-WORKDIR /GraphletFrontend
-COPY ./Graphlet/package*.json ./
-COPY ./Graphlet/vite.config.ts ./
-COPY ./Graphlet/tsconfig.json ./
-COPY ./Graphlet/src/* ./src/
-COPY ./Graphlet/public/* ./public/
-COPY ./Graphlet/tsconfig.app.json ./
-COPY ./Graphlet/tsconfig.node.json ./
-RUN npm install
-COPY . .
+WORKDIR /app
+# copy the entire frontend project folder so nested files are preserved
+COPY ./Graphlet/ ./
+
+# expose the Vite default port and set it explicitly
+ENV PORT=5173
+
+# avoid trying to open a browser inside the container (xdg-open missing)
+ENV BROWSER=none
+
+RUN npm install --production=false
+
 EXPOSE 5173
-CMD ["npm", "run", "dev", "--", "--host"]
+
+# bind Vite to all interfaces and don't open a browser
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--open", "false"]

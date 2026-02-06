@@ -15,6 +15,16 @@ export default function CreatingNewWokspace({ onClose }: CreatingNewProps) {
     const [workspaceName, setWorkspaceName] = useState('')
     async function handleCreateWorkspace(){
         console.log(workspaceName);
+
+        await  fetch("http://localhost:5188/api/workspaces", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                name: workspaceName
+            })
+        })
     }
 
     function handleClose(){
