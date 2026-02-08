@@ -39,10 +39,13 @@ export default function Login(){
         })
         const res = await rawRes.json();
 
-        //console.log(emailInput.value, passwordInput.value);
+        console.log("helo");
+        console.log(rawRes)
+        console.log(res.status)
         let token ="";
-        if(res.status === 200){
+        if(rawRes.status === 200){
              token= res.token;
+             localStorage.removeItem("token")
              localStorage.setItem("token", token);
         }else{
             setError(true);

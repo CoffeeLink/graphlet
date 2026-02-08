@@ -1,13 +1,33 @@
 import "../components/workspaces/workspaces.css"
 import OtherOptions from "../components/workspaces/otherOptions.tsx";
 import {useState} from "react";
-import WorkspacePreview from "../components/workspaces/workspacePrewiev.tsx";
+import WorkspacePreview from "../components/workspaces/workspacePreview.tsx";
 import CreatingNewWokspace from "../components/workspaces/creatingNewWokspace.tsx";
-import {getWorkspaces} from "../components/workspaces/getWorkspaces.tsx";
+//import {getWorkspaces} from "../components/workspaces/getWorkspaces.tsx";
 import {Workspace} from "../components/classes/workspace.tsx"
 
+async function getWorkspaces(){
+    await fetch("http://localhost:5188/api/workspace",{
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${localStorage.getItem("token")}`
+        }
+    }).then((response: Response) => {
+        if (response.status === 200) {
+            return response.json().then((data) => {
+                console.log("Workspaces data:", data);
+                return data;
+            });
+        }
+        else {
+            console.log(response);
+        }
+    });
+}
+
 export default function Workspaces() {
-    const [workspaces, setWorkspaces] = useState<Workspace>(new Workspace(null, "", new Date()));
+    const [workspaces, setWorkspaces] = useState<Workspace>(new Workspace(null, ""));
     setTimeout(
         async () => {
             const w = await getWorkspaces();
@@ -45,10 +65,8 @@ export default function Workspaces() {
                 </header>
                 <main>
                     <div className="workspaces-container">
-                        {Object.keys(workspaces).length === 0 && <p>No workspaces found. Create a new workspace to get started!</p>}
-                        {Object.entries(workspaces).map(([id, workspace]) => (
-                            <WorkspacePreview key={id} id={id} name={workspace.name} createdAt={workspace.createdAt} />
-                        ))}
+                        {workspaces && workspaces.id && <WorkspacePreview id={workspaces.id} name={workspaces.name}/>}
+
                     </div>
                     {showCreatingNew && <CreatingNewWokspace onClose={handleCloseCreatingNew}  />}
                 </main>
