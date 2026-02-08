@@ -3,12 +3,12 @@
   "WorkspaceRootPath": "H:\\Suli\\13\\Project\\13-project\\graphlet\\backend\\Grahplet\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{2B7DB479-F895-E86E-561F-65100331BE83}|Grahplet\\Grahplet.csproj|h:\\suli\\13\\project\\13-project\\graphlet\\backend\\grahplet\\grahplet\\grahplet.http||{5703B403-55E7-4C63-8C88-A8F52C7A45C5}",
-      "RelativeMoniker": "D:0:0:{2B7DB479-F895-E86E-561F-65100331BE83}|Grahplet\\Grahplet.csproj|solutionrelative:grahplet\\grahplet.http||{5703B403-55E7-4C63-8C88-A8F52C7A45C5}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{2B7DB479-F895-E86E-561F-65100331BE83}|Grahplet\\Grahplet.csproj|h:\\suli\\13\\project\\13-project\\graphlet\\backend\\grahplet\\grahplet\\configuration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{2B7DB479-F895-E86E-561F-65100331BE83}|Grahplet\\Grahplet.csproj|solutionrelative:grahplet\\configuration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2B7DB479-F895-E86E-561F-65100331BE83}|Grahplet\\Grahplet.csproj|h:\\suli\\13\\project\\13-project\\graphlet\\backend\\grahplet\\grahplet\\grahplet.http||{5703B403-55E7-4C63-8C88-A8F52C7A45C5}",
+      "RelativeMoniker": "D:0:0:{2B7DB479-F895-E86E-561F-65100331BE83}|Grahplet\\Grahplet.csproj|solutionrelative:grahplet\\grahplet.http||{5703B403-55E7-4C63-8C88-A8F52C7A45C5}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{2B7DB479-F895-E86E-561F-65100331BE83}|Grahplet\\Grahplet.csproj|h:\\suli\\13\\project\\13-project\\graphlet\\backend\\grahplet\\grahplet\\models.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -30,7 +30,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 3,
+          "SelectedChildIndex": 4,
           "Children": [
             {
               "$type": "Bookmark",
@@ -46,26 +46,25 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "Grahplet.http",
               "DocumentMoniker": "H:\\Suli\\13\\Project\\13-project\\graphlet\\backend\\Grahplet\\Grahplet\\Grahplet.http",
               "RelativeDocumentMoniker": "Grahplet\\Grahplet.http",
-              "ToolTip": "H:\\Suli\\13\\Project\\13-project\\graphlet\\backend\\Grahplet\\Grahplet\\Grahplet.http*",
-              "RelativeToolTip": "Grahplet\\Grahplet.http*",
+              "ToolTip": "H:\\Suli\\13\\Project\\13-project\\graphlet\\backend\\Grahplet\\Grahplet\\Grahplet.http",
+              "RelativeToolTip": "Grahplet\\Grahplet.http",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAEAAAAbAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003502|",
-              "WhenOpened": "2026-02-01T10:40:58.387Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-01T10:40:58.387Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 0,
               "Title": "Configuration.cs",
               "DocumentMoniker": "H:\\Suli\\13\\Project\\13-project\\graphlet\\backend\\Grahplet\\Grahplet\\Configuration.cs",
               "RelativeDocumentMoniker": "Grahplet\\Configuration.cs",
-              "ToolTip": "H:\\Suli\\13\\Project\\13-project\\graphlet\\backend\\Grahplet\\Grahplet\\Configuration.cs",
-              "RelativeToolTip": "Grahplet\\Configuration.cs",
-              "ViewState": "AgIAACMAAAAAAAAAAAAAwDEAAAAkAAAAAAAAAA==",
+              "ToolTip": "H:\\Suli\\13\\Project\\13-project\\graphlet\\backend\\Grahplet\\Grahplet\\Configuration.cs*",
+              "RelativeToolTip": "Grahplet\\Configuration.cs*",
+              "ViewState": "AgIAAAQAAAAAAAAAAAAowB4AAAAwAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-02-01T10:35:17.671Z",
               "EditorCaption": ""
@@ -80,8 +79,7 @@
               "RelativeToolTip": "Grahplet\\Models.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-01T10:35:12.046Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-01T10:35:12.046Z"
             },
             {
               "$type": "Document",
@@ -93,8 +91,7 @@
               "RelativeToolTip": "Grahplet\\Program.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-01T10:35:08.184Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-01T10:35:08.184Z"
             },
             {
               "$type": "Document",
@@ -106,8 +103,7 @@
               "RelativeToolTip": "Grahplet\\Grahplet.csproj",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
-              "WhenOpened": "2026-01-30T14:21:55.616Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-01-30T14:21:55.616Z"
             }
           ]
         },

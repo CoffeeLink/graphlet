@@ -28,7 +28,7 @@ public sealed class Configuration
     }
 
     public IPAddress HostAddress { get; private set; } = IPAddress.Loopback;
-    public int Port { get; private set; } = 5000;
+    public int Port { get; private set; } = 5188;
     public IReadOnlyList<ServiceType> AllowedServiceTypes { get; private set; } = new List<ServiceType> { ServiceType.API };
     
     // NATS configuration
