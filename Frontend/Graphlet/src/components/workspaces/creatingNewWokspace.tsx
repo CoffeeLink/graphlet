@@ -16,10 +16,11 @@ export default function CreatingNewWokspace({ onClose }: CreatingNewProps) {
     async function handleCreateWorkspace(){
         console.log(workspaceName);
 
-        await  fetch("http://localhost:5188/api/workspaces", {
+        await  fetch("http://localhost:5188/api/workspace", {
             method: "POST",
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${localStorage.getItem("token")}`
             },
             body: JSON.stringify({
                 name: workspaceName

@@ -1,48 +1,79 @@
 import "../components/workspaces/workspaces.css"
 import OtherOptions from "../components/workspaces/otherOptions.tsx";
-import {useState} from "react";
+import { useState, useEffect } from "react";
 import WorkspacePreview from "../components/workspaces/workspacePreview.tsx";
-import CreatingNewWokspace from "../components/workspaces/creatingNewWokspace.tsx";
-//import {getWorkspaces} from "../components/workspaces/getWorkspaces.tsx";
-import {Workspace} from "../components/classes/workspace.tsx"
+import CreatingNewWorkspace from "../components/workspaces/creatingNewWokspace.tsx";
+import { Workspace } from "../components/classes/workspace.tsx"
 
-async function getWorkspaces(){
-    await fetch("http://localhost:5188/api/workspace",{
+// Fetch workspaces from the API. Returns an array of Workspace objects (empty array on unexpected responses).
+async function getWorkspaces(): Promise<Workspace[]> {
+    const response = await fetch("http://localhost:5188/api/workspace", {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${localStorage.getItem("token")}`
         }
-    }).then((response: Response) => {
-        if (response.status === 200) {
-            return response.json().then((data) => {
-                console.log("Workspaces data:", data);
-                return data;
-            });
-        }
-        else {
-            console.log(response);
-        }
     });
+
+    if (response.ok) {
+        const data = await response.json();
+        // Ensure we always return an array
+        if (Array.isArray(data)) return data as Workspace[];
+        if (data == null) return [];
+        return [data as Workspace];
+    }
+
+    // Non-OK responses: try to extract message or return empty
+    let errText = `Failed to fetch workspaces: ${response.status} ${response.statusText}`;
+    try {
+        const errBody = await response.json();
+        if (errBody && errBody.message) errText = errBody.message;
+    } catch {
+        /* ignore JSON parse errors */
+    }
+    throw new Error(errText);
 }
 
 export default function Workspaces() {
-    const [workspaces, setWorkspaces] = useState<Workspace>(new Workspace(null, ""));
-    setTimeout(
-        async () => {
-            const w = await getWorkspaces();
-            if (w !== undefined && w !== null) setWorkspaces(w);
-        },
-        100
-    )
+    // Workspaces list (array) rather than single Workspace
+    const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
 
+    // UI state
     const [showOtherOptions, setShowOtherOptions] = useState(false);
+    const [showCreatingNew, setShowCreatingNew] = useState(false);
+    const [searchTerm, setSearchTerm] = useState("");
+
+    useEffect(() => {
+        let mounted = true;
+
+        async function load() {
+            if (!mounted) return;
+            setLoading(true);
+            setError(null);
+
+            try {
+                const data = await getWorkspaces();
+                if (!mounted) return;
+                setWorkspaces(data);
+            } catch (err) {
+                if (!mounted) return;
+                setError((err as Error)?.message ?? "Failed to load workspaces");
+            } finally {
+                if (mounted) setLoading(false);
+            }
+        }
+
+        load();
+
+        return () => { mounted = false; };
+    }, []);
 
     function handleOtherOptionsClick() { //opening options when button clicked
         setShowOtherOptions(prev => !prev);
     }
 
-    const [showCreatingNew, setShowCreatingNew] = useState(false);
     function handleCreateNewClick() {
         setShowCreatingNew(prev => !prev);
     }
@@ -51,7 +82,18 @@ export default function Workspaces() {
         setShowCreatingNew(false);
     }
 
+    const filteredWorkspaces = workspaces.filter(w => {
+        if (!searchTerm) return true;
+        return (w?.name ?? "").toLowerCase().includes(searchTerm.toLowerCase());
+    });
 
+    function handleRename(id: string, name: string) {
+        setWorkspaces(prev => prev.map(w => w.id === id ? { ...w, name } : w));
+    }
+
+    function handleDelete(id: string) {
+        setWorkspaces(prev => prev.filter(w => w.id !== id));
+    }
 
     return (
         <>
@@ -59,16 +101,25 @@ export default function Workspaces() {
                 <header className={"workspaces-header"}>
                     <h2>My workspaces</h2>
                     <button type="button" onClick={handleCreateNewClick}>Create new</button>
-                    <p>Keresés <input type="text"/></p>
+                    <p>Keresés <input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Search workspaces..."/></p>
                     <button onClick={handleOtherOptionsClick}>...</button>
                     {showOtherOptions && <OtherOptions/>}
                 </header>
                 <main>
                     <div className="workspaces-container">
-                        {workspaces && workspaces.id && <WorkspacePreview id={workspaces.id} name={workspaces.name}/>}
+                        {loading && <p>Loading workspaces...</p>}
+                        {error && <div className="workspaces-error">{error}</div>}
+
+                        {!loading && !error && filteredWorkspaces.length === 0 && (
+                            <p>No workspaces found.</p>
+                        )}
+
+                        {!loading && !error && filteredWorkspaces.map((w, idx) => (
+                            <WorkspacePreview key={w.id ?? `ws-${idx}`} id={w.id ?? `ws-${idx}`} name={w.name} onRename={handleRename} onDelete={handleDelete} />
+                        ))}
 
                     </div>
-                    {showCreatingNew && <CreatingNewWokspace onClose={handleCloseCreatingNew}  />}
+                    {showCreatingNew && <CreatingNewWorkspace onClose={handleCloseCreatingNew}  />}
                 </main>
             </div>
         </>
