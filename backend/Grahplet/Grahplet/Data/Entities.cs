@@ -67,6 +67,9 @@ public class DbNote
     [MaxLength(1000)]
     public string? File_ContentUrl { get; set; }
     public Guid UserId { get; set; }
+    public Guid WorkspaceId { get; set; }
+    public float PositionX { get; set; }
+    public float PositionY { get; set; }
 }
 
 public class DbNoteTag

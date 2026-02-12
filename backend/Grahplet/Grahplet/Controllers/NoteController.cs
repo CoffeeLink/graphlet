@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Grahplet.Controllers;
 
 [ApiController]
-[Route("api/note")]
+[Route("api/workspace/{workspaceId}/note")]
 public class NoteController : ControllerBase
 {
     private readonly INoteRepository _noteRepository;
@@ -26,18 +26,18 @@ public class NoteController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> ListNotes()
+    public async Task<IActionResult> ListNotes(Guid workspaceId)
     {
         var authCheck = RequireAuth();
         if (authCheck != null) return authCheck;
 
         var userId = HttpContext.GetRequiredUserId();
-        var notes = await _noteRepository.GetNotesAsync(userId);
+        var notes = await _noteRepository.GetNotesAsync(userId, workspaceId);
         return Ok(notes);
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateNote([FromBody] NoteCreate request)
+    public async Task<IActionResult> CreateNote(Guid workspaceId, [FromBody] NoteCreate request)
     {
         var authCheck = RequireAuth();
         if (authCheck != null) return authCheck;
@@ -48,18 +48,18 @@ public class NoteController : ControllerBase
         }
 
         var userId = HttpContext.GetRequiredUserId();
-        var note = await _noteRepository.CreateNoteAsync(userId, request);
-        return CreatedAtAction(nameof(GetNote), new { noteId = note.Id }, note);
+        var note = await _noteRepository.CreateNoteAsync(userId, workspaceId, request);
+        return CreatedAtAction(nameof(GetNote), new { workspaceId, noteId = note.Id }, note);
     }
 
     [HttpGet("{noteId}")]
-    public async Task<IActionResult> GetNote(Guid noteId)
+    public async Task<IActionResult> GetNote(Guid workspaceId, Guid noteId)
     {
         var authCheck = RequireAuth();
         if (authCheck != null) return authCheck;
 
         var userId = HttpContext.GetRequiredUserId();
-        var note = await _noteRepository.GetNoteAsync(userId, noteId);
+        var note = await _noteRepository.GetNoteAsync(userId, workspaceId, noteId);
         
         if (note == null)
         {
@@ -70,13 +70,13 @@ public class NoteController : ControllerBase
     }
 
     [HttpPut("{noteId}")]
-    public async Task<IActionResult> UpdateNote(Guid noteId, [FromBody] NoteUpdate request)
+    public async Task<IActionResult> UpdateNote(Guid workspaceId, Guid noteId, [FromBody] NoteUpdate request)
     {
         var authCheck = RequireAuth();
         if (authCheck != null) return authCheck;
 
         var userId = HttpContext.GetRequiredUserId();
-        var note = await _noteRepository.UpdateNoteAsync(userId, noteId, request);
+        var note = await _noteRepository.UpdateNoteAsync(userId, workspaceId, noteId, request);
         
         if (note == null)
         {
@@ -87,13 +87,13 @@ public class NoteController : ControllerBase
     }
 
     [HttpDelete("{noteId}")]
-    public async Task<IActionResult> DeleteNote(Guid noteId)
+    public async Task<IActionResult> DeleteNote(Guid workspaceId, Guid noteId)
     {
         var authCheck = RequireAuth();
         if (authCheck != null) return authCheck;
 
         var userId = HttpContext.GetRequiredUserId();
-        var success = await _noteRepository.DeleteNoteAsync(userId, noteId);
+        var success = await _noteRepository.DeleteNoteAsync(userId, workspaceId, noteId);
         
         if (!success)
         {
@@ -104,13 +104,13 @@ public class NoteController : ControllerBase
     }
 
     [HttpGet("{noteId}/tags/{tagId}")]
-    public async Task<IActionResult> GetNoteTag(Guid noteId, Guid tagId)
+    public async Task<IActionResult> GetNoteTag(Guid workspaceId, Guid noteId, Guid tagId)
     {
         var authCheck = RequireAuth();
         if (authCheck != null) return authCheck;
 
         var userId = HttpContext.GetRequiredUserId();
-        var note = await _noteRepository.GetNoteAsync(userId, noteId);
+        var note = await _noteRepository.GetNoteAsync(userId, workspaceId, noteId);
         
         if (note == null)
         {
@@ -128,13 +128,13 @@ public class NoteController : ControllerBase
     }
 
     [HttpPut("{noteId}/tags/{tagId}")]
-    public async Task<IActionResult> AttachTagToNote(Guid noteId, Guid tagId)
+    public async Task<IActionResult> AttachTagToNote(Guid workspaceId, Guid noteId, Guid tagId)
     {
         var authCheck = RequireAuth();
         if (authCheck != null) return authCheck;
 
         var userId = HttpContext.GetRequiredUserId();
-        var note = await _noteRepository.AttachTagToNoteAsync(userId, noteId, tagId);
+        var note = await _noteRepository.AttachTagToNoteAsync(userId, workspaceId, noteId, tagId);
         
         if (note == null)
         {
@@ -145,13 +145,13 @@ public class NoteController : ControllerBase
     }
 
     [HttpDelete("{noteId}/tags/{tagId}")]
-    public async Task<IActionResult> DetachTagFromNote(Guid noteId, Guid tagId)
+    public async Task<IActionResult> DetachTagFromNote(Guid workspaceId, Guid noteId, Guid tagId)
     {
         var authCheck = RequireAuth();
         if (authCheck != null) return authCheck;
 
         var userId = HttpContext.GetRequiredUserId();
-        var success = await _noteRepository.DetachTagFromNoteAsync(userId, noteId, tagId);
+        var success = await _noteRepository.DetachTagFromNoteAsync(userId, workspaceId, noteId, tagId);
         
         if (!success)
         {
@@ -162,7 +162,7 @@ public class NoteController : ControllerBase
     }
 
     [HttpPost("{noteId}/relation")]
-    public async Task<IActionResult> CreateRelation(Guid noteId, [FromBody] NoteRelationCreate request)
+    public async Task<IActionResult> CreateRelation(Guid workspaceId, Guid noteId, [FromBody] NoteRelationCreate request)
     {
         var authCheck = RequireAuth();
         if (authCheck != null) return authCheck;
@@ -173,18 +173,18 @@ public class NoteController : ControllerBase
         }
 
         var userId = HttpContext.GetRequiredUserId();
-        var relation = await _noteRepository.CreateRelationAsync(userId, noteId, request);
-        return CreatedAtAction(nameof(GetRelation), new { noteId, relationId = relation.Id }, relation);
+        var relation = await _noteRepository.CreateRelationAsync(userId, workspaceId, noteId, request);
+        return CreatedAtAction(nameof(GetRelation), new { workspaceId, noteId, relationId = relation.Id }, relation);
     }
 
     [HttpGet("{noteId}/relation/{relationId}")]
-    public async Task<IActionResult> GetRelation(Guid noteId, Guid relationId)
+    public async Task<IActionResult> GetRelation(Guid workspaceId, Guid noteId, Guid relationId)
     {
         var authCheck = RequireAuth();
         if (authCheck != null) return authCheck;
 
         var userId = HttpContext.GetRequiredUserId();
-        var relation = await _noteRepository.GetRelationAsync(userId, noteId, relationId);
+        var relation = await _noteRepository.GetRelationAsync(userId, workspaceId, noteId, relationId);
         
         if (relation == null)
         {
@@ -195,13 +195,13 @@ public class NoteController : ControllerBase
     }
 
     [HttpPut("{noteId}/relation/{relationId}")]
-    public async Task<IActionResult> UpdateRelation(Guid noteId, Guid relationId, [FromBody] NoteRelationUpdate request)
+    public async Task<IActionResult> UpdateRelation(Guid workspaceId, Guid noteId, Guid relationId, [FromBody] NoteRelationUpdate request)
     {
         var authCheck = RequireAuth();
         if (authCheck != null) return authCheck;
 
         var userId = HttpContext.GetRequiredUserId();
-        var relation = await _noteRepository.UpdateRelationAsync(userId, noteId, relationId, request);
+        var relation = await _noteRepository.UpdateRelationAsync(userId, workspaceId, noteId, relationId, request);
         
         if (relation == null)
         {
@@ -212,13 +212,13 @@ public class NoteController : ControllerBase
     }
 
     [HttpDelete("{noteId}/relation/{relationId}")]
-    public async Task<IActionResult> DeleteRelation(Guid noteId, Guid relationId)
+    public async Task<IActionResult> DeleteRelation(Guid workspaceId, Guid noteId, Guid relationId)
     {
         var authCheck = RequireAuth();
         if (authCheck != null) return authCheck;
 
         var userId = HttpContext.GetRequiredUserId();
-        var success = await _noteRepository.DeleteRelationAsync(userId, noteId, relationId);
+        var success = await _noteRepository.DeleteRelationAsync(userId, workspaceId, noteId, relationId);
         
         if (!success)
         {
