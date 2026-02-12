@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import WorkspacePreview from "../components/workspaces/workspacePreview.tsx";
 import CreatingNewWorkspace from "../components/workspaces/creatingNewWokspace.tsx";
 import { Workspace } from "../components/classes/workspace.tsx"
+import WorkspaceComponent from "../components/workspace/workspace.tsx";
 
 // Fetch workspaces from the API. Returns an array of Workspace objects (empty array on unexpected responses).
 async function getWorkspaces(): Promise<Workspace[]> {
@@ -44,6 +45,13 @@ export default function Workspaces() {
     const [showOtherOptions, setShowOtherOptions] = useState(false);
     const [showCreatingNew, setShowCreatingNew] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
+
+    // Opened workspace ID for editing notes — initialize from URL query param so opening in new tab works
+    const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
+    const initialWorkspaceId = params.get('workspaceId');
+    const isInitialFullscreen = params.get('fullscreen') === '1';
+    const [openedWorkspaceId, setOpenedWorkspaceId] = useState<string | null>(initialWorkspaceId);
+    const [isFullscreenMode, setIsFullscreenMode] = useState<boolean>(isInitialFullscreen);
 
     useEffect(() => {
         let mounted = true;
@@ -95,6 +103,33 @@ export default function Workspaces() {
         setWorkspaces(prev => prev.filter(w => w.id !== id));
     }
 
+    function openWorkspaceInNewTab(id: string) {
+        // include fullscreen flag to render only the workspace in the new tab
+        const url = window.location.origin + window.location.pathname + `?workspaceId=${encodeURIComponent(id)}&fullscreen=1`;
+        window.open(url, '_blank');
+    }
+
+    function closeOpenedWorkspace() {
+        setOpenedWorkspaceId(null);
+        setIsFullscreenMode(false);
+        // remove workspaceId and fullscreen from URL without reloading
+        if (typeof window !== 'undefined') {
+            const u = new URL(window.location.href);
+            u.searchParams.delete('workspaceId');
+            u.searchParams.delete('fullscreen');
+            window.history.replaceState({}, '', u.toString());
+        }
+    }
+
+    // If the page was opened in fullscreen mode, render only the workspace component to occupy the whole tab
+    if (isFullscreenMode && openedWorkspaceId) {
+        return (
+            <div style={{height: '100vh', width: '100vw', margin: 0}}>
+                <WorkspaceComponent workspaceId={openedWorkspaceId} />
+            </div>
+        );
+    }
+
     return (
         <>
             <div className="workspaces-page popup-bg">
@@ -106,19 +141,32 @@ export default function Workspaces() {
                     {showOtherOptions && <OtherOptions/>}
                 </header>
                 <main>
-                    <div className="workspaces-container">
-                        {loading && <p>Loading workspaces...</p>}
-                        {error && <div className="workspaces-error">{error}</div>}
+                    {openedWorkspaceId ? (
+                        <section style={{height: '100%'}}>
+                            <div style={{display: 'flex', alignItems: 'center', padding: 8}}>
+                                <button onClick={closeOpenedWorkspace}>Back</button>
+                                <h3 style={{marginLeft: 12}}>Workspace: {openedWorkspaceId}</h3>
+                            </div>
+                            <div style={{height: 'calc(100% - 56px)'}}>
+                                <WorkspaceComponent workspaceId={openedWorkspaceId ?? undefined} />
+                            </div>
+                        </section>
+                    ) : (
+                        <div className="workspaces-container">
+                            {loading && <p>Loading workspaces...</p>}
+                            {error && <div className="workspaces-error">{error}</div>}
 
-                        {!loading && !error && filteredWorkspaces.length === 0 && (
-                            <p>No workspaces found.</p>
-                        )}
+                            {!loading && !error && filteredWorkspaces.length === 0 && (
+                                <p>No workspaces found.</p>
+                            )}
 
-                        {!loading && !error && filteredWorkspaces.map((w, idx) => (
-                            <WorkspacePreview key={w.id ?? `ws-${idx}`} id={w.id ?? `ws-${idx}`} name={w.name} onRename={handleRename} onDelete={handleDelete} />
-                        ))}
+                            {!loading && !error && filteredWorkspaces.map((w, idx) => (
+                                <WorkspacePreview key={w.id ?? `ws-${idx}`} id={w.id ?? `ws-${idx}`} name={w.name} onRename={handleRename} onDelete={handleDelete} onOpen={() => openWorkspaceInNewTab(w.id ?? `ws-${idx}`)} />
+                            ))}
 
-                    </div>
+                        </div>
+                    )}
+
                     {showCreatingNew && <CreatingNewWorkspace onClose={handleCloseCreatingNew}  />}
                 </main>
             </div>

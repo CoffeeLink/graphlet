@@ -7,6 +7,7 @@ interface WorkspacePreviewProps {
     name: string;
     onRename?: (id: string, name: string) => void;
     onDelete?: (id: string) => void;
+    onOpen?: () => void; // <-- Add onOpen prop type
 }
 
 export default function WorkspacePreview(props: WorkspacePreviewProps) {
@@ -31,7 +32,12 @@ export default function WorkspacePreview(props: WorkspacePreviewProps) {
             });
             if (!resp.ok) {
                 let errText = `${resp.status} ${resp.statusText}`;
-                try { const body = await resp.json(); if (body?.message) errText = body.message; } catch {}
+                try {
+                    const body = await resp.json(); if (body?.message) errText = body.message;
+                } catch (err)
+                {
+                    console.error("Failed to parse error response:", err);
+                }
                 throw new Error(errText);
             }
             // success - inform parent
@@ -57,7 +63,12 @@ export default function WorkspacePreview(props: WorkspacePreviewProps) {
             });
             if (!resp.ok) {
                 let errText = `${resp.status} ${resp.statusText}`;
-                try { const body = await resp.json(); if (body?.message) errText = body.message; } catch {}
+                try {
+                    const body = await resp.json(); if (body?.message) errText = body.message;
+                }
+                catch (err) {
+                    console.error("Failed to parse error response:", err);
+                }
                 throw new Error(errText);
             }
             if (props.onDelete) props.onDelete(props.id);
@@ -72,10 +83,10 @@ export default function WorkspacePreview(props: WorkspacePreviewProps) {
 
     return (
         <div className="workspacePreview">
-            <div className="workspace-preview">
+            <div className="workspace-preview" onClick={props.onOpen}>
                 <p style={{ color: "black" }}>{renameValue}</p>
                 <div style={{ position: "relative" }}>
-                    <button aria-haspopup="menu" onClick={() => setShowMenu(s => !s)}>...</button>
+                    <button aria-haspopup="menu" onClick={(e) => { e.stopPropagation(); setShowMenu(s => !s); }}>...</button>
                     {showMenu && (
                         <div className="workspace-preview-menu" role="menu">
                             <button role="menuitem" onClick={() => { setConfirmMode("rename"); setShowMenu(false); setRenameValue(props.name); }}>Rename</button>
