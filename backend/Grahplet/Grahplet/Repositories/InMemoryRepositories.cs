@@ -247,15 +247,16 @@ public class InMemoryTagRepository : ITagRepository
 public class InMemoryNoteRepository : INoteRepository
 {
     private readonly Dictionary<Guid, Note> _notes = new();
-    private readonly Dictionary<Guid, List<Guid>> _userNotes = new(); // userId -> noteIds
+    private readonly Dictionary<(Guid UserId, Guid WorkspaceId), List<Guid>> _workspaceNotes = new(); // (userId, workspaceId) -> noteIds
     private readonly Dictionary<(Guid NoteId, Guid TagId), bool> _noteTags = new();
     // Relations storage moved into the same repository as notes
     private readonly Dictionary<Guid, NoteRelation> _relations = new();
     private readonly Dictionary<Guid, List<Guid>> _noteRelations = new(); // noteId -> relationIds
 
-    public Task<List<Note>> GetNotesAsync(Guid userId)
+    public Task<List<Note>> GetNotesAsync(Guid userId, Guid workspaceId)
     {
-        if (!_userNotes.TryGetValue(userId, out var noteIds))
+        var key = (userId, workspaceId);
+        if (!_workspaceNotes.TryGetValue(key, out var noteIds))
         {
             return Task.FromResult(new List<Note>());
         }
@@ -268,9 +269,10 @@ public class InMemoryNoteRepository : INoteRepository
         return Task.FromResult(notes);
     }
 
-    public Task<Note?> GetNoteAsync(Guid userId, Guid noteId)
+    public Task<Note?> GetNoteAsync(Guid userId, Guid workspaceId, Guid noteId)
     {
-        if (!_userNotes.TryGetValue(userId, out var noteIds) || !noteIds.Contains(noteId))
+        var key = (userId, workspaceId);
+        if (!_workspaceNotes.TryGetValue(key, out var noteIds) || !noteIds.Contains(noteId))
         {
             return Task.FromResult<Note?>(null);
         }
@@ -279,7 +281,7 @@ public class InMemoryNoteRepository : INoteRepository
         return Task.FromResult(note);
     }
 
-    public Task<Note> CreateNoteAsync(Guid userId, NoteCreate note)
+    public Task<Note> CreateNoteAsync(Guid userId, Guid workspaceId, NoteCreate note)
     {
         var id = Guid.NewGuid();
         var newNote = new Note
@@ -289,24 +291,28 @@ public class InMemoryNoteRepository : INoteRepository
             Kind = note.Kind,
             Value = note.Value,
             File = note.File,
+            WorkspaceId = workspaceId,
+            PositionX = note.PositionX,
+            PositionY = note.PositionY,
             Tags = new List<Tag>(),
             Relations = new List<NoteRelation>()
         };
 
         _notes[id] = newNote;
 
-        if (!_userNotes.ContainsKey(userId))
+        var key = (userId, workspaceId);
+        if (!_workspaceNotes.ContainsKey(key))
         {
-            _userNotes[userId] = new List<Guid>();
+            _workspaceNotes[key] = new List<Guid>();
         }
 
-        _userNotes[userId].Add(id);
+        _workspaceNotes[key].Add(id);
         return Task.FromResult(newNote);
     }
 
-    public Task<Note?> UpdateNoteAsync(Guid userId, Guid noteId, NoteUpdate note)
+    public Task<Note?> UpdateNoteAsync(Guid userId, Guid workspaceId, Guid noteId, NoteUpdate note)
     {
-        var existing = GetNoteAsync(userId, noteId).Result;
+        var existing = GetNoteAsync(userId, workspaceId, noteId).Result;
         if (existing == null)
         {
             return Task.FromResult<Note?>(null);
@@ -332,12 +338,23 @@ public class InMemoryNoteRepository : INoteRepository
             existing.File = note.File;
         }
 
+        if (note.PositionX.HasValue)
+        {
+            existing.PositionX = note.PositionX.Value;
+        }
+
+        if (note.PositionY.HasValue)
+        {
+            existing.PositionY = note.PositionY.Value;
+        }
+
         return Task.FromResult<Note?>(existing);
     }
 
-    public Task<bool> DeleteNoteAsync(Guid userId, Guid noteId)
+    public Task<bool> DeleteNoteAsync(Guid userId, Guid workspaceId, Guid noteId)
     {
-        if (!_userNotes.TryGetValue(userId, out var noteIds) || !noteIds.Contains(noteId))
+        var key = (userId, workspaceId);
+        if (!_workspaceNotes.TryGetValue(key, out var noteIds) || !noteIds.Contains(noteId))
         {
             return Task.FromResult(false);
         }
@@ -347,9 +364,9 @@ public class InMemoryNoteRepository : INoteRepository
         return Task.FromResult(true);
     }
 
-    public Task<Note?> AttachTagToNoteAsync(Guid userId, Guid noteId, Guid tagId)
+    public Task<Note?> AttachTagToNoteAsync(Guid userId, Guid workspaceId, Guid noteId, Guid tagId)
     {
-        var note = GetNoteAsync(userId, noteId).Result;
+        var note = GetNoteAsync(userId, workspaceId, noteId).Result;
         if (note == null)
         {
             return Task.FromResult<Note?>(null);
@@ -367,9 +384,9 @@ public class InMemoryNoteRepository : INoteRepository
         return Task.FromResult<Note?>(note);
     }
 
-    public Task<bool> DetachTagFromNoteAsync(Guid userId, Guid noteId, Guid tagId)
+    public Task<bool> DetachTagFromNoteAsync(Guid userId, Guid workspaceId, Guid noteId, Guid tagId)
     {
-        var note = GetNoteAsync(userId, noteId).Result;
+        var note = GetNoteAsync(userId, workspaceId, noteId).Result;
         if (note == null)
         {
             return Task.FromResult(false);
@@ -380,10 +397,10 @@ public class InMemoryNoteRepository : INoteRepository
         return Task.FromResult(removed || note.Tags.Count > 0);
     }
 
-    public Task<NoteRelation?> GetRelationAsync(Guid userId, Guid noteId, Guid relationId)
+    public Task<NoteRelation?> GetRelationAsync(Guid userId, Guid workspaceId, Guid noteId, Guid relationId)
     {
         // Ensure the user has access to the note
-        var note = GetNoteAsync(userId, noteId).Result;
+        var note = GetNoteAsync(userId, workspaceId, noteId).Result;
         if (note == null)
         {
             return Task.FromResult<NoteRelation?>(null);
@@ -398,10 +415,10 @@ public class InMemoryNoteRepository : INoteRepository
         return Task.FromResult(relation);
     }
 
-    public Task<NoteRelation> CreateRelationAsync(Guid userId, Guid noteId, NoteRelationCreate relation)
+    public Task<NoteRelation> CreateRelationAsync(Guid userId, Guid workspaceId, Guid noteId, NoteRelationCreate relation)
     {
         // Ensure the user has access to the note
-        var note = GetNoteAsync(userId, noteId).Result;
+        var note = GetNoteAsync(userId, workspaceId, noteId).Result;
         if (note == null)
         {
             // In this in-memory example, we still create nothing and throw by returning a failed task is not desired
@@ -428,9 +445,9 @@ public class InMemoryNoteRepository : INoteRepository
         return Task.FromResult(newRelation);
     }
 
-    public Task<NoteRelation?> UpdateRelationAsync(Guid userId, Guid noteId, Guid relationId, NoteRelationUpdate relation)
+    public Task<NoteRelation?> UpdateRelationAsync(Guid userId, Guid workspaceId, Guid noteId, Guid relationId, NoteRelationUpdate relation)
     {
-        var existing = GetRelationAsync(userId, noteId, relationId).Result;
+        var existing = GetRelationAsync(userId, workspaceId, noteId, relationId).Result;
         if (existing == null)
         {
             return Task.FromResult<NoteRelation?>(null);
@@ -444,10 +461,10 @@ public class InMemoryNoteRepository : INoteRepository
         return Task.FromResult<NoteRelation?>(existing);
     }
 
-    public Task<bool> DeleteRelationAsync(Guid userId, Guid noteId, Guid relationId)
+    public Task<bool> DeleteRelationAsync(Guid userId, Guid workspaceId, Guid noteId, Guid relationId)
     {
         // Ensure the user has access to the note
-        var note = GetNoteAsync(userId, noteId).Result;
+        var note = GetNoteAsync(userId, workspaceId, noteId).Result;
         if (note == null)
         {
             return Task.FromResult(false);

@@ -36,17 +36,17 @@ public interface ITagRepository
 
 public interface INoteRepository
 {
-    Task<List<Note>> GetNotesAsync(Guid userId);
-    Task<Note?> GetNoteAsync(Guid userId, Guid noteId);
-    Task<Note> CreateNoteAsync(Guid userId, NoteCreate note);
-    Task<Note?> UpdateNoteAsync(Guid userId, Guid noteId, NoteUpdate note);
-    Task<bool> DeleteNoteAsync(Guid userId, Guid noteId);
-    Task<Note?> AttachTagToNoteAsync(Guid userId, Guid noteId, Guid tagId);
-    Task<bool> DetachTagFromNoteAsync(Guid userId, Guid noteId, Guid tagId);
+    Task<List<Note>> GetNotesAsync(Guid userId, Guid workspaceId);
+    Task<Note?> GetNoteAsync(Guid userId, Guid workspaceId, Guid noteId);
+    Task<Note> CreateNoteAsync(Guid userId, Guid workspaceId, NoteCreate note);
+    Task<Note?> UpdateNoteAsync(Guid userId, Guid workspaceId, Guid noteId, NoteUpdate note);
+    Task<bool> DeleteNoteAsync(Guid userId, Guid workspaceId, Guid noteId);
+    Task<Note?> AttachTagToNoteAsync(Guid userId, Guid workspaceId, Guid noteId, Guid tagId);
+    Task<bool> DetachTagFromNoteAsync(Guid userId, Guid workspaceId, Guid noteId, Guid tagId);
     // Relations are managed via the same repository as notes
-    Task<NoteRelation?> GetRelationAsync(Guid userId, Guid noteId, Guid relationId);
-    Task<NoteRelation> CreateRelationAsync(Guid userId, Guid noteId, NoteRelationCreate relation);
-    Task<NoteRelation?> UpdateRelationAsync(Guid userId, Guid noteId, Guid relationId, NoteRelationUpdate relation);
-    Task<bool> DeleteRelationAsync(Guid userId, Guid noteId, Guid relationId);
+    Task<NoteRelation?> GetRelationAsync(Guid userId, Guid workspaceId, Guid noteId, Guid relationId);
+    Task<NoteRelation> CreateRelationAsync(Guid userId, Guid workspaceId, Guid noteId, NoteRelationCreate relation);
+    Task<NoteRelation?> UpdateRelationAsync(Guid userId, Guid workspaceId, Guid noteId, Guid relationId, NoteRelationUpdate relation);
+    Task<bool> DeleteRelationAsync(Guid userId, Guid workspaceId, Guid noteId, Guid relationId);
 }
 

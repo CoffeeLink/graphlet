@@ -41,12 +41,15 @@ internal static class EfMap
                     ContentUrl = n.File_ContentUrl ?? string.Empty
                 }
                 : null,
+            WorkspaceId = n.WorkspaceId,
+            PositionX = n.PositionX,
+            PositionY = n.PositionY,
             Tags = tags,
             Relations = relations
         };
     }
 
-    public static DbNote Apply(this DbNote e, NoteCreate m, Guid userId)
+    public static DbNote Apply(this DbNote e, NoteCreate m, Guid userId, Guid workspaceId)
     {
         e.Id = e.Id == Guid.Empty ? Guid.NewGuid() : e.Id;
         e.Name = m.Name;
@@ -60,6 +63,9 @@ internal static class EfMap
             e.File_ContentUrl = m.File.ContentUrl;
         }
         e.UserId = userId;
+        e.WorkspaceId = workspaceId;
+        e.PositionX = m.PositionX;
+        e.PositionY = m.PositionY;
         return e;
     }
 
@@ -75,6 +81,8 @@ internal static class EfMap
             e.File_ContentType = m.File.ContentType;
             e.File_ContentUrl = m.File.ContentUrl;
         }
+        if (m.PositionX.HasValue) e.PositionX = m.PositionX.Value;
+        if (m.PositionY.HasValue) e.PositionY = m.PositionY.Value;
     }
 }
 
@@ -247,9 +255,9 @@ public class EfTagRepository(GrahpletDbContext db) : ITagRepository
 
 public class EfNoteRepository(GrahpletDbContext db) : INoteRepository
 {
-    public async Task<List<Note>> GetNotesAsync(Guid userId)
+    public async Task<List<Note>> GetNotesAsync(Guid userId, Guid workspaceId)
     {
-        var notes = await db.Notes.AsNoTracking().Where(n => n.UserId == userId).ToListAsync();
+        var notes = await db.Notes.AsNoTracking().Where(n => n.UserId == userId && n.WorkspaceId == workspaceId).ToListAsync();
         var noteIds = notes.Select(n => n.Id).ToList();
         var noteTags = await db.NoteTags.AsNoTracking().Where(nt => noteIds.Contains(nt.NoteId)).ToListAsync();
         var tagIds = noteTags.Select(nt => nt.TagId).Distinct().ToList();
@@ -281,9 +289,9 @@ public class EfNoteRepository(GrahpletDbContext db) : INoteRepository
         )).ToList();
     }
 
-    public async Task<Note?> GetNoteAsync(Guid userId, Guid noteId)
+    public async Task<Note?> GetNoteAsync(Guid userId, Guid workspaceId, Guid noteId)
     {
-        var n = await db.Notes.AsNoTracking().FirstOrDefaultAsync(x => x.Id == noteId && x.UserId == userId);
+        var n = await db.Notes.AsNoTracking().FirstOrDefaultAsync(x => x.Id == noteId && x.UserId == userId && x.WorkspaceId == workspaceId);
         if (n == null) return null;
         var noteTags = await db.NoteTags.AsNoTracking().Where(nt => nt.NoteId == noteId).ToListAsync();
         var tagIds = noteTags.Select(x => x.TagId).ToList();
@@ -293,16 +301,16 @@ public class EfNoteRepository(GrahpletDbContext db) : INoteRepository
         return n.ToModel(tags.Select(t => t.ToModel()).ToList(), relModels);
     }
 
-    public async Task<Note> CreateNoteAsync(Guid userId, NoteCreate note)
+    public async Task<Note> CreateNoteAsync(Guid userId, Guid workspaceId, NoteCreate note)
     {
-        var e = new DbNote().Apply(note, userId);
+        var e = new DbNote().Apply(note, userId, workspaceId);
         db.Notes.Add(e);
         await db.SaveChangesAsync();
 
-        // Attach initial tags if provided (no workspace filtering at note level)
+        // Attach initial tags if provided (workspace filtering at note level)
         if (note.Tags != null && note.Tags.Count > 0)
         {
-            var validTagIds = await db.Tags.Where(t => t.UserId == userId && note.Tags.Contains(t.Id)).Select(t => t.Id).ToListAsync();
+            var validTagIds = await db.Tags.Where(t => t.UserId == userId && t.WorkspaceId == workspaceId && note.Tags.Contains(t.Id)).Select(t => t.Id).ToListAsync();
             foreach (var tagId in validTagIds)
             {
                 db.NoteTags.Add(new DbNoteTag { NoteId = e.Id, TagId = tagId });
@@ -310,22 +318,22 @@ public class EfNoteRepository(GrahpletDbContext db) : INoteRepository
             await db.SaveChangesAsync();
         }
 
-        var created = await GetNoteAsync(userId, e.Id);
+        var created = await GetNoteAsync(userId, workspaceId, e.Id);
         return created!;
     }
 
-    public async Task<Note?> UpdateNoteAsync(Guid userId, Guid noteId, NoteUpdate note)
+    public async Task<Note?> UpdateNoteAsync(Guid userId, Guid workspaceId, Guid noteId, NoteUpdate note)
     {
-        var e = await db.Notes.FirstOrDefaultAsync(x => x.Id == noteId && x.UserId == userId);
+        var e = await db.Notes.FirstOrDefaultAsync(x => x.Id == noteId && x.UserId == userId && x.WorkspaceId == workspaceId);
         if (e == null) return null;
         e.Apply(note);
         await db.SaveChangesAsync();
-        return await GetNoteAsync(userId, noteId);
+        return await GetNoteAsync(userId, workspaceId, noteId);
     }
 
-    public async Task<bool> DeleteNoteAsync(Guid userId, Guid noteId)
+    public async Task<bool> DeleteNoteAsync(Guid userId, Guid workspaceId, Guid noteId)
     {
-        var e = await db.Notes.FirstOrDefaultAsync(x => x.Id == noteId && x.UserId == userId);
+        var e = await db.Notes.FirstOrDefaultAsync(x => x.Id == noteId && x.UserId == userId && x.WorkspaceId == workspaceId);
         if (e == null) return false;
         // cascade-like cleanup
         var nts = db.NoteTags.Where(nt => nt.NoteId == noteId);
@@ -337,11 +345,11 @@ public class EfNoteRepository(GrahpletDbContext db) : INoteRepository
         return true;
     }
 
-    public async Task<Note?> AttachTagToNoteAsync(Guid userId, Guid noteId, Guid tagId)
+    public async Task<Note?> AttachTagToNoteAsync(Guid userId, Guid workspaceId, Guid noteId, Guid tagId)
     {
-        var note = await db.Notes.AsNoTracking().FirstOrDefaultAsync(n => n.Id == noteId && n.UserId == userId);
+        var note = await db.Notes.AsNoTracking().FirstOrDefaultAsync(n => n.Id == noteId && n.UserId == userId && n.WorkspaceId == workspaceId);
         if (note == null) return null;
-        var tag = await db.Tags.AsNoTracking().FirstOrDefaultAsync(t => t.Id == tagId && t.UserId == userId);
+        var tag = await db.Tags.AsNoTracking().FirstOrDefaultAsync(t => t.Id == tagId && t.UserId == userId && t.WorkspaceId == workspaceId);
         if (tag == null) return null;
         var exists = await db.NoteTags.AnyAsync(x => x.NoteId == noteId && x.TagId == tagId);
         if (!exists)
@@ -349,12 +357,12 @@ public class EfNoteRepository(GrahpletDbContext db) : INoteRepository
             db.NoteTags.Add(new DbNoteTag { NoteId = noteId, TagId = tagId });
             await db.SaveChangesAsync();
         }
-        return await GetNoteAsync(userId, noteId);
+        return await GetNoteAsync(userId, workspaceId, noteId);
     }
 
-    public async Task<bool> DetachTagFromNoteAsync(Guid userId, Guid noteId, Guid tagId)
+    public async Task<bool> DetachTagFromNoteAsync(Guid userId, Guid workspaceId, Guid noteId, Guid tagId)
     {
-        var note = await db.Notes.AsNoTracking().FirstOrDefaultAsync(n => n.Id == noteId && n.UserId == userId);
+        var note = await db.Notes.AsNoTracking().FirstOrDefaultAsync(n => n.Id == noteId && n.UserId == userId && n.WorkspaceId == workspaceId);
         if (note == null) return false;
         var link = await db.NoteTags.FirstOrDefaultAsync(x => x.NoteId == noteId && x.TagId == tagId);
         if (link == null) return false;
@@ -363,18 +371,22 @@ public class EfNoteRepository(GrahpletDbContext db) : INoteRepository
         return true;
     }
 
-    public async Task<NoteRelation?> GetRelationAsync(Guid userId, Guid noteId, Guid relationId)
+    public async Task<NoteRelation?> GetRelationAsync(Guid userId, Guid workspaceId, Guid noteId, Guid relationId)
     {
+        // Verify the note belongs to the workspace
+        var noteExists = await db.Notes.AsNoTracking().AnyAsync(n => n.Id == noteId && n.UserId == userId && n.WorkspaceId == workspaceId);
+        if (!noteExists) return null;
+        
         var r = await db.NoteRelations.AsNoTracking().FirstOrDefaultAsync(x => x.Id == relationId && x.UserId == userId && (x.Note1Id == noteId || x.Note2Id == noteId));
         if (r == null) return null;
         return new NoteRelation { Id = r.Id, Connection = new[] { r.Note1Id, r.Note2Id }, Name = r.Name };
     }
 
-    public async Task<NoteRelation> CreateRelationAsync(Guid userId, Guid noteId, NoteRelationCreate relation)
+    public async Task<NoteRelation> CreateRelationAsync(Guid userId, Guid workspaceId, Guid noteId, NoteRelationCreate relation)
     {
-        // Ensure both notes belong to the user
-        var exists1 = await db.Notes.AnyAsync(n => n.Id == noteId && n.UserId == userId);
-        var exists2 = await db.Notes.AnyAsync(n => n.Id == relation.OtherId && n.UserId == userId);
+        // Ensure both notes belong to the user and workspace
+        var exists1 = await db.Notes.AnyAsync(n => n.Id == noteId && n.UserId == userId && n.WorkspaceId == workspaceId);
+        var exists2 = await db.Notes.AnyAsync(n => n.Id == relation.OtherId && n.UserId == userId && n.WorkspaceId == workspaceId);
         if (!exists1 || !exists2) throw new InvalidOperationException("Note not found or access denied");
         var e = new DbNoteRelation { Id = Guid.NewGuid(), UserId = userId, Note1Id = noteId, Note2Id = relation.OtherId, Name = relation.Name };
         db.NoteRelations.Add(e);
@@ -382,8 +394,12 @@ public class EfNoteRepository(GrahpletDbContext db) : INoteRepository
         return new NoteRelation { Id = e.Id, Connection = new[] { e.Note1Id, e.Note2Id }, Name = e.Name };
     }
 
-    public async Task<NoteRelation?> UpdateRelationAsync(Guid userId, Guid noteId, Guid relationId, NoteRelationUpdate relation)
+    public async Task<NoteRelation?> UpdateRelationAsync(Guid userId, Guid workspaceId, Guid noteId, Guid relationId, NoteRelationUpdate relation)
     {
+        // Verify the note belongs to the workspace
+        var noteExists = await db.Notes.AsNoTracking().AnyAsync(n => n.Id == noteId && n.UserId == userId && n.WorkspaceId == workspaceId);
+        if (!noteExists) return null;
+        
         var e = await db.NoteRelations.FirstOrDefaultAsync(r => r.Id == relationId && r.UserId == userId && (r.Note1Id == noteId || r.Note2Id == noteId));
         if (e == null) return null;
         if (!string.IsNullOrWhiteSpace(relation.Name)) e.Name = relation.Name!;
@@ -391,8 +407,12 @@ public class EfNoteRepository(GrahpletDbContext db) : INoteRepository
         return new NoteRelation { Id = e.Id, Connection = new[] { e.Note1Id, e.Note2Id }, Name = e.Name };
     }
 
-    public async Task<bool> DeleteRelationAsync(Guid userId, Guid noteId, Guid relationId)
+    public async Task<bool> DeleteRelationAsync(Guid userId, Guid workspaceId, Guid noteId, Guid relationId)
     {
+        // Verify the note belongs to the workspace
+        var noteExists = await db.Notes.AsNoTracking().AnyAsync(n => n.Id == noteId && n.UserId == userId && n.WorkspaceId == workspaceId);
+        if (!noteExists) return false;
+        
         var e = await db.NoteRelations.FirstOrDefaultAsync(r => r.Id == relationId && r.UserId == userId && (r.Note1Id == noteId || r.Note2Id == noteId));
         if (e == null) return false;
         db.NoteRelations.Remove(e);

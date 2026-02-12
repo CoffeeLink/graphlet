@@ -323,14 +323,16 @@ Authorization: {{token}}
 %}
 
 ### Create Note (Text)
-POST {{baseUrl}}/api/note
+POST {{baseUrl}}/api/workspace/{{workspaceId}}/note
 Authorization: {{token}}
 Content-Type: application/json
 
 {
   "name": "My First Note",
   "kind": "txt",
-  "value": "This is a test note with some content"
+  "value": "This is a test note with some content",
+  "positionX": 100.5,
+  "positionY": 200.75
 }
 
 > {%
@@ -344,14 +346,16 @@ Content-Type: application/json
 %}
 
 ### Create Note (URL)
-POST {{baseUrl}}/api/note
+POST {{baseUrl}}/api/workspace/{{workspaceId}}/note
 Authorization: {{token}}
 Content-Type: application/json
 
 {
   "name": "Useful Link",
   "kind": "url",
-  "value": "https://example.com"
+  "value": "https://example.com",
+  "positionX": 300.0,
+  "positionY": 150.25
 }
 
 > {%
@@ -365,7 +369,7 @@ Content-Type: application/json
 %}
 
 ### List Notes
-GET {{baseUrl}}/api/note
+GET {{baseUrl}}/api/workspace/{{workspaceId}}/note
 Authorization: {{token}}
 
 > {%
@@ -376,7 +380,7 @@ Authorization: {{token}}
 %}
 
 ### Get Note
-GET {{baseUrl}}/api/note/{{noteId}}
+GET {{baseUrl}}/api/workspace/{{workspaceId}}/note/{{noteId}}
 Authorization: {{token}}
 
 > {%
@@ -386,13 +390,15 @@ Authorization: {{token}}
 %}
 
 ### Update Note
-PUT {{baseUrl}}/api/note/{{noteId}}
+PUT {{baseUrl}}/api/workspace/{{workspaceId}}/note/{{noteId}}
 Authorization: {{token}}
 Content-Type: application/json
 
 {
   "name": "Updated Note Title",
-  "value": "Updated content"
+  "value": "Updated content",
+  "positionX": 250.5,
+  "positionY": 350.0
 }
 
 > {%
@@ -402,7 +408,7 @@ Content-Type: application/json
 %}
 
 ### Create Note - bad request (missing name/kind) → 400
-POST {{baseUrl}}/api/note
+POST {{baseUrl}}/api/workspace/{{workspaceId}}/note
 Authorization: {{token}}
 Content-Type: application/json
 
@@ -416,7 +422,7 @@ Content-Type: application/json
 %}
 
 ### Get Note - not found → 404
-GET {{baseUrl}}/api/note/{{missingId}}
+GET {{baseUrl}}/api/workspace/{{workspaceId}}/note/{{missingId}}
 Authorization: {{token}}
 
 > {%
@@ -426,7 +432,7 @@ Authorization: {{token}}
 %}
 
 ### Attach Tag to Note
-PUT {{baseUrl}}/api/note/{{noteId}}/tags/{{tagId}}
+PUT {{baseUrl}}/api/workspace/{{workspaceId}}/note/{{noteId}}/tags/{{tagId}}
 Authorization: {{token}}
 
 > {%
@@ -436,7 +442,7 @@ Authorization: {{token}}
 %}
 
 ### Get Note-Tag Association
-GET {{baseUrl}}/api/note/{{noteId}}/tags/{{tagId}}
+GET {{baseUrl}}/api/workspace/{{workspaceId}}/note/{{noteId}}/tags/{{tagId}}
 Authorization: {{token}}
 
 > {%
@@ -446,7 +452,7 @@ Authorization: {{token}}
 %}
 
 ### Create Note Relation
-POST {{baseUrl}}/api/note/{{noteId}}/relation
+POST {{baseUrl}}/api/workspace/{{workspaceId}}/note/{{noteId}}/relation
 Authorization: {{token}}
 Content-Type: application/json
 
@@ -466,7 +472,7 @@ Content-Type: application/json
 %}
 
 ### Get Note Relation
-GET {{baseUrl}}/api/note/{{noteId}}/relation/{{relationId}}
+GET {{baseUrl}}/api/workspace/{{workspaceId}}/note/{{noteId}}/relation/{{relationId}}
 Authorization: {{token}}
 
 > {%
@@ -476,7 +482,7 @@ Authorization: {{token}}
 %}
 
 ### Update Relation
-PUT {{baseUrl}}/api/note/{{noteId}}/relation/{{relationId}}
+PUT {{baseUrl}}/api/workspace/{{workspaceId}}/note/{{noteId}}/relation/{{relationId}}
 Authorization: {{token}}
 Content-Type: application/json
 
@@ -491,7 +497,7 @@ Content-Type: application/json
 %}
 
 ### Create Relation - bad request (missing fields) → 400
-POST {{baseUrl}}/api/note/{{noteId}}/relation
+POST {{baseUrl}}/api/workspace/{{workspaceId}}/note/{{noteId}}/relation
 Authorization: {{token}}
 Content-Type: application/json
 
@@ -506,7 +512,7 @@ Content-Type: application/json
 %}
 
 ### Get Relation - not found → 404
-GET {{baseUrl}}/api/note/{{noteId}}/relation/{{missingId}}
+GET {{baseUrl}}/api/workspace/{{workspaceId}}/note/{{noteId}}/relation/{{missingId}}
 Authorization: {{token}}
 
 > {%
@@ -516,7 +522,7 @@ Authorization: {{token}}
 %}
 
 ### Detach Tag from Note
-DELETE {{baseUrl}}/api/note/{{noteId}}/tags/{{tagId}}
+DELETE {{baseUrl}}/api/workspace/{{workspaceId}}/note/{{noteId}}/tags/{{tagId}}
 Authorization: {{token}}
 
 > {%
@@ -526,7 +532,7 @@ Authorization: {{token}}
 %}
 
 ### Delete Note Relation
-DELETE {{baseUrl}}/api/note/{{noteId}}/relation/{{relationId}}
+DELETE {{baseUrl}}/api/workspace/{{workspaceId}}/note/{{noteId}}/relation/{{relationId}}
 Authorization: {{token}}
 
 > {%
@@ -536,7 +542,7 @@ Authorization: {{token}}
 %}
 
 ### Delete Note
-DELETE {{baseUrl}}/api/note/{{noteId}}
+DELETE {{baseUrl}}/api/workspace/{{workspaceId}}/note/{{noteId}}
 Authorization: {{token}}
 
 > {%

@@ -50,6 +50,9 @@ public class Note
     public string Kind { get; set; } = string.Empty; // txt, url, file
     public string? Value { get; set; }
     public FileInfo? File { get; set; }
+    public Guid WorkspaceId { get; set; }
+    public float PositionX { get; set; }
+    public float PositionY { get; set; }
     public List<Tag> Tags { get; set; } = new();
     public List<NoteRelation> Relations { get; set; } = new();
 }
@@ -60,6 +63,8 @@ public class NoteCreate
     public string Kind { get; set; } = string.Empty; // txt, url, file
     public string? Value { get; set; }
     public FileInfo? File { get; set; }
+    public float PositionX { get; set; }
+    public float PositionY { get; set; }
     public List<Guid>? Tags { get; set; }
 }
 
@@ -69,6 +74,8 @@ public class NoteUpdate
     public string? Kind { get; set; }
     public string? Value { get; set; }
     public FileInfo? File { get; set; }
+    public float? PositionX { get; set; }
+    public float? PositionY { get; set; }
 }
 
 public class NoteRelation
