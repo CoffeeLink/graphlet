@@ -57,7 +57,7 @@ export default function Workspace({ workspaceId }: { workspaceId?: string }) {
                 // API returns an array of notes (or possibly a single item) in the API note shape.
                 const data = Array.isArray(res) ? res : (res ? [res] : []);
                 if (data.length === 0) {
-                    setNotes([{ id: 'test-1', title: 'Test note', content: 'This is a test note', x: 0, y: 0 }]);
+                    //setNotes([{ id: 'test-1', title: 'Test note', content: 'This is a test note', x: 0, y: 0 }]);
                 } else {
                     // Map API note shape -> local Note
                     /* eslint-disable  @typescript-eslint/no-explicit-any */
@@ -165,7 +165,7 @@ export default function Workspace({ workspaceId }: { workspaceId?: string }) {
     // Add a test note at center for manual testing
     async function addTestNote() {
         const id = `test-${Date.now()}`;
-        const note: Note = { id, title: 'New test', content: 'Created for testing', x: 0, y: 0 };
+        const note: Note = { id, title: 'New note', content: 'New note text', x: 0, y: 0 };
 
         if (!workspaceId) {
             setNotes(prev => [ ...prev, note ]);
@@ -218,6 +218,10 @@ export default function Workspace({ workspaceId }: { workspaceId?: string }) {
             {/* toolbar */}
             <div className="workspace-toolbar">
                 <div className="workspace-error">{errorText}</div>
+                {/* floating test toolbar on the canvas */}
+                <div className="floating-toolbar">
+                    <button onClick={addTestNote} className="add-test-note-btn">Add new note</button>
+                </div>
             </div>
 
             {/* canvas area */}
@@ -231,10 +235,7 @@ export default function Workspace({ workspaceId }: { workspaceId?: string }) {
                 className={`workspace-canvas ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
             >
 
-                {/* floating test toolbar on the canvas */}
-                <div className="floating-toolbar">
-                    <button onClick={addTestNote} className="add-test-note-btn">Add new note</button>
-                </div>
+
 
                 {/* render notes positioned relative to center + offset */}
                 {notes.map(note => (
