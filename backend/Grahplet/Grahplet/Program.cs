@@ -27,7 +27,13 @@ builder.Services.AddScoped<ITagRepository, EfTagRepository>();
 builder.Services.AddScoped<INoteRepository, EfNoteRepository>();
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
-builder.Services.AddSingleton<EventsHandler>();
+
+// Register SessionDictionary as a singleton hosted service
+builder.Services.AddSingleton<SessionDictionary>();
+builder.Services.AddHostedService(provider => provider.GetRequiredService<SessionDictionary>());
+
+// SessionClient should be transient (one per WebSocket connection)
+builder.Services.AddTransient<SessionClient>();
 // CORS: Permissive policy to allow cross-origin requests
 builder.Services.AddCors(options =>
 {
@@ -76,13 +82,13 @@ app.UseWebSockets(new WebSocketOptions
     KeepAliveInterval = TimeSpan.FromSeconds(30)
 });
 
-app.Map("/ws/event", async context =>
+app.Map("/ws/live", async context =>
 {
     if (context.WebSockets.IsWebSocketRequest)
     {
         using var socket = await context.WebSockets.AcceptWebSocketAsync();
-        var hub = context.RequestServices.GetRequiredService<EventsHandler>();
-        await hub.HandleAsync(context, socket);
+        var sessionClient = context.RequestServices.GetRequiredService<SessionClient>();
+        await sessionClient.HandleAsync(context, socket);
     }
     else
     {
