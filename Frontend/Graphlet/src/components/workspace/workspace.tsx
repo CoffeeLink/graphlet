@@ -25,8 +25,19 @@ export default function Workspace({ workspaceId }: { workspaceId?: string }) {
 
     useEffect(()=>{
         async function getNotes(){
+            // If we don't have a workspaceId we can't call the workspace-scoped API from apimap.json
+            if (!workspaceId) {
+                setErrorText("No workspace selected — using sample notes for testing.");
+                setNotes([
+                    {id: 's1', title: 'Sample 1', content: 'Hello from center', x: 0, y: 0},
+                    {id: 's2', title: 'Left', content: 'To the left', x: -200, y: -50},
+                    {id: 's3', title: 'Right', content: 'To the right', x: 220, y: 80}
+                ]);
+                return;
+            }
+
             try {
-                const url = workspaceId ? `http://localhost:5188/api/note?workspaceId=${encodeURIComponent(workspaceId)}` : "http://localhost:5188/api/note";
+                const url = `http://localhost:5188/api/workspace/${encodeURIComponent(workspaceId)}/note`;
                 const raw = await fetch(url, {
                     headers: {
                         "Content-Type": "application/json",
@@ -43,13 +54,21 @@ export default function Workspace({ workspaceId }: { workspaceId?: string }) {
                     return;
                 }
                 const res = await raw.json();
-                // Normalize response into an array
+                // API returns an array of notes (or possibly a single item) in the API note shape.
                 const data = Array.isArray(res) ? res : (res ? [res] : []);
                 if (data.length === 0) {
-                    // No notes returned — add a single test note in the center for manual testing
                     setNotes([{ id: 'test-1', title: 'Test note', content: 'This is a test note', x: 0, y: 0 }]);
                 } else {
-                    setNotes(data);
+                    // Map API note shape -> local Note
+                    /* eslint-disable  @typescript-eslint/no-explicit-any */
+                    const mapped: Note[] = data.map((n: any) => ({
+                        id: n.id ?? n.noteId ?? String(Math.random()),
+                        title: n.name ?? n.title ?? 'Untitled',
+                        content: n.value ?? n.content ?? '',
+                        x: Number(n.positionX ?? n.x ?? 0) || 0,
+                        y: Number(n.positionY ?? n.y ?? 0) || 0
+                    }));
+                    setNotes(mapped);
                 }
             } catch (err: unknown) {
                 const msg = err instanceof Error ? err.message : String(err);
@@ -64,19 +83,33 @@ export default function Workspace({ workspaceId }: { workspaceId?: string }) {
         getNotes();
     },[workspaceId]);
 
-    async function saveNoteToApi(partial: Partial<Note> & { id: string; name: string; kind:string; value: string; file:null; tags:[] }){
+    // Save changes to an existing note via the workspace-scoped API
+    async function saveNoteToApi(noteId: string, patch: Partial<Note>){
+        if (!workspaceId) {
+            setErrorText('No workspace selected — cannot save to server.');
+            return;
+        }
+
+        // Build API NoteUpdate shape based on provided patch
+        /* eslint-disable  @typescript-eslint/no-explicit-any */
+        const body: any = {};
+        if (patch.title !== undefined) body.name = patch.title;
+        if (patch.content !== undefined) body.value = patch.content;
+        if (patch.x !== undefined) body.positionX = patch.x;
+        if (patch.y !== undefined) body.positionY = patch.y;
+
         try{
-            const resp = await fetch(`http://localhost:5188/api/note`, {
+            const resp = await fetch(`http://localhost:5188/api/workspace/${encodeURIComponent(workspaceId)}/note/${encodeURIComponent(noteId)}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${localStorage.getItem('token')}`
                 },
-                body: JSON.stringify(partial)
+                body: JSON.stringify(body)
             });
             if(!resp.ok){
                 let txt = `${resp.status} ${resp.statusText}`;
-                try{ const body = await resp.json(); if(body?.message) txt = body.message; } catch { void 0; }
+                try{ const b = await resp.json(); if(b?.message) txt = b.message; } catch { void 0; }
                 setErrorText("Failed to save note: " + txt);
             }
         }catch(e){
@@ -86,7 +119,12 @@ export default function Workspace({ workspaceId }: { workspaceId?: string }) {
     }
 
     async function deleteNote(id:string){
-        const res = await fetch(`http://localhost:5188/api/note/${id}`, {
+        if (!workspaceId) {
+            // just remove locally
+            setNotes(n => n.filter(note => note.id !== id));
+            return;
+        }
+        const res = await fetch(`http://localhost:5188/api/workspace/${encodeURIComponent(workspaceId)}/note/${encodeURIComponent(id)}`, {
             method: "DELETE",
             headers: {
                 "Content-Type": "application/json",
@@ -125,10 +163,54 @@ export default function Workspace({ workspaceId }: { workspaceId?: string }) {
     }
 
     // Add a test note at center for manual testing
-    function addTestNote() {
+    async function addTestNote() {
         const id = `test-${Date.now()}`;
         const note: Note = { id, title: 'New test', content: 'Created for testing', x: 0, y: 0 };
-        setNotes(prev => [ ...prev, note ]);
+
+        if (!workspaceId) {
+            setNotes(prev => [ ...prev, note ]);
+            return;
+        }
+
+        // Create on server using NoteCreate shape
+        const body = {
+            name: note.title,
+            kind: 'text',
+            value: note.content,
+            positionX: note.x,
+            positionY: note.y,
+            tags: [] as string[]
+        };
+
+        try{
+            const resp = await fetch(`http://localhost:5188/api/workspace/${encodeURIComponent(workspaceId)}/note`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(body)
+            });
+            if(!resp.ok){
+                setErrorText(`Failed to create note: ${resp.status} ${resp.statusText}`);
+                // fallback to local
+                setNotes(prev => [ ...prev, note ]);
+                return;
+            }
+            const created = await resp.json();
+            const mapped: Note = {
+                id: created.id ?? id,
+                title: created.name ?? note.title,
+                content: created.value ?? note.content,
+                x: Number(created.positionX ?? note.x) || 0,
+                y: Number(created.positionY ?? note.y) || 0
+            };
+            setNotes(prev => [ ...prev, mapped ]);
+        }catch(e){
+            const msg = e instanceof Error ? e.message : String(e);
+            setErrorText("Failed to create note: " + msg);
+            setNotes(prev => [ ...prev, note ]);
+        }
     }
 
     return (
@@ -166,11 +248,12 @@ export default function Workspace({ workspaceId }: { workspaceId?: string }) {
                               }}
                               onMoveEnd={(x:number,y:number)=>{
                                   updateNoteLocally(note.id, { x, y });
-                                  saveNoteToApi({ id: note.id, x, y });
+                                  void saveNoteToApi(note.id, { x, y });
                               }}
                               onUpdate={(patch: Partial<Note>)=>{
                                   updateNoteLocally(note.id, patch);
-                                  saveNoteToApi({ id: note.id, ...patch });
+                                  // map patch to API fields and save
+                                  void saveNoteToApi(note.id, patch);
                               }} />
                 ))}
              </div>
@@ -241,6 +324,12 @@ function NoteCard({note, parentRef, offset, onDelete, onMove, onMoveEnd, onUpdat
     const [isEditing, setIsEditing] = useState(false);
     const [editTitle, setEditTitle] = useState(note.title ?? '');
     const [editContent, setEditContent] = useState(note.content ?? '');
+
+    useEffect(()=>{
+        // sync edits when external note changes
+        setEditTitle(note.title ?? '');
+        setEditContent(note.content ?? '');
+    }, [note.title, note.content]);
 
     function handleDoubleClick(e: React.MouseEvent){
         e.stopPropagation();

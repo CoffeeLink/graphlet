@@ -54,10 +54,21 @@
         }
       }
     },
-    "/api/note": {
+    "/api/workspace/{workspaceId}/note": {
       "get": {
         "tags": [
           "Note"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
         ],
         "responses": {
           "200": {
@@ -68,6 +79,17 @@
       "post": {
         "tags": [
           "Note"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
         ],
         "requestBody": {
           "content": {
@@ -96,12 +118,21 @@
         }
       }
     },
-    "/api/note/{noteId}": {
+    "/api/workspace/{workspaceId}/note/{noteId}": {
       "get": {
         "tags": [
           "Note"
         ],
         "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
           {
             "name": "noteId",
             "in": "path",
@@ -123,6 +154,15 @@
           "Note"
         ],
         "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
           {
             "name": "noteId",
             "in": "path",
@@ -165,6 +205,15 @@
         ],
         "parameters": [
           {
+            "name": "workspaceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
             "name": "noteId",
             "in": "path",
             "required": true,
@@ -181,12 +230,21 @@
         }
       }
     },
-    "/api/note/{noteId}/tags/{tagId}": {
+    "/api/workspace/{workspaceId}/note/{noteId}/tags/{tagId}": {
       "get": {
         "tags": [
           "Note"
         ],
         "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
           {
             "name": "noteId",
             "in": "path",
@@ -218,6 +276,15 @@
         ],
         "parameters": [
           {
+            "name": "workspaceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
             "name": "noteId",
             "in": "path",
             "required": true,
@@ -248,6 +315,15 @@
         ],
         "parameters": [
           {
+            "name": "workspaceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
             "name": "noteId",
             "in": "path",
             "required": true,
@@ -273,12 +349,21 @@
         }
       }
     },
-    "/api/note/{noteId}/relation": {
+    "/api/workspace/{workspaceId}/note/{noteId}/relation": {
       "post": {
         "tags": [
           "Note"
         ],
         "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
           {
             "name": "noteId",
             "in": "path",
@@ -316,12 +401,21 @@
         }
       }
     },
-    "/api/note/{noteId}/relation/{relationId}": {
+    "/api/workspace/{workspaceId}/note/{noteId}/relation/{relationId}": {
       "get": {
         "tags": [
           "Note"
         ],
         "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
           {
             "name": "noteId",
             "in": "path",
@@ -353,6 +447,15 @@
         ],
         "parameters": [
           {
+            "name": "workspaceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
             "name": "noteId",
             "in": "path",
             "required": true,
@@ -402,6 +505,15 @@
           "Note"
         ],
         "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
           {
             "name": "noteId",
             "in": "path",
@@ -885,6 +997,22 @@
               }
             ]
           },
+          "positionX": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "float"
+          },
+          "positionY": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "float"
+          },
           "tags": {
             "type": [
               "null",
@@ -950,6 +1078,24 @@
                 "$ref": "#/components/schemas/FileInfo"
               }
             ]
+          },
+          "positionX": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "float"
+          },
+          "positionY": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "float"
           }
         }
       },
