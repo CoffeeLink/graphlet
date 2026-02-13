@@ -1,0 +1,208 @@
+### WebSocket Tests for Live Session
+@baseUrl = http://localhost:5188
+@wsUrl = ws://localhost:5188/ws/live
+@email = demo@example.com
+@password = demo
+@invalidToken = invalid-token-12345
+@missingWorkspaceId = 00000000-0000-0000-0000-000000000001
+
+### Setup: Login to get valid token
+POST {{baseUrl}}/api/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+> {%
+    client.test("Login succeeds", function () {
+        client.assert(response.status === 200, "Expected 200 OK");
+        client.assert(!!response.body.token, "Token should be present");
+    });
+    client.global.set("token", response.body.token);
+%}
+
+### Setup: Create a workspace for testing
+POST {{baseUrl}}/api/workspace
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "name": "WebSocket Test Workspace"
+}
+
+> {%
+    client.test("Create workspace succeeds", function () {
+        client.assert(response.status === 201, "Expected 201 Created");
+        client.assert(!!response.body.id, "Workspace id should be present");
+    });
+    client.global.set("workspaceId", response.body.id);
+%}
+
+
+### WS-001: Successful Auth + SessionInfo + Ping/Pong
+WEBSOCKET {{wsUrl}}
+Content-Type: application/json // Used for content highlighting only
+
+{
+  "type": "Auth",
+  "token": "{{token}}",
+  "workspace": "{{workspaceId}}"
+}
+
+=== wait-for-server
+
+> {%
+    var receivedSessionInfo = false;
+    var pingCount = 0;
+    var pongCount = 0;
+
+    response.body.onEachMessage((message, unsubscribe, output) => {
+        const jsonMessage = JSON.parse(message);
+        client.log("Received: " + JSON.stringify(jsonMessage));
+
+        // Check for SessionInfo
+        if (jsonMessage.type === "SessionInfo") {
+            receivedSessionInfo = true;
+            client.test("SessionInfo received", function() {
+                client.assert(jsonMessage.users !== undefined, "SessionInfo should have users");
+                client.assert(jsonMessage.locks !== undefined, "SessionInfo should have locks");
+            });
+        }
+
+        // Handle Ping/Pong
+        if (jsonMessage.type === "Ping") {
+            pingCount++;
+            client.log("Received Ping #" + pingCount);
+            output(JSON.stringify({
+                type: "Pong"
+            }));
+            pongCount++;
+        }
+
+        // After receiving a few pings, we can stop
+        if (pingCount >= 3) {
+            client.test("Ping/Pong works", function() {
+                client.assert(pingCount >= 3, "Should receive at least 3 pings");
+                client.assert(receivedSessionInfo, "Should receive SessionInfo");
+            });
+            unsubscribe();
+        }
+    }, () => {
+        if (pingCount >= 3) {
+            client.test("Ping/Pong works", function () {
+                client.assert(pingCount >= 3, "Should receive at least 3 pings");
+                client.assert(receivedSessionInfo, "Should receive SessionInfo");
+            })
+        }
+        client.log("Stopped listening for WebSocket messages");
+    });
+%}
+
+### WS-002: Lock and Unlock Actions
+WEBSOCKET {{wsUrl}}
+Content-Type: application/json
+
+{
+  "type": "Auth",
+  "token": "{{token}}",
+  "workspace": "{{workspaceId}}"
+}
+
+=== wait-for-server
+
+{
+  "type": "Lock",
+  "userId": "00000000-0000-0000-0000-000000000000",
+  "noteId": "11111111-1111-1111-1111-111111111111"
+}
+
+=== wait-for-server
+
+{
+  "type": "Unlock",
+  "userId": "00000000-0000-0000-0000-000000000000",
+  "noteId": "11111111-1111-1111-1111-111111111111"
+}
+
+=== wait-for-server
+
+> {%
+    var lockReceived = false;
+    var unlockReceived = false;
+
+    response.body.onEachMessage((message, unsubscribe, output) => {
+        const jsonMessage = JSON.parse(message);
+        client.log("Received: " + JSON.stringify(jsonMessage));
+
+        // Respond to pings
+        if (jsonMessage.type === "Ping") {
+            output(JSON.stringify({
+                type: "Pong"
+            }));
+        }
+
+        // Check for lock action
+        if (jsonMessage.type === "Lock") {
+            lockReceived = true;
+            client.log("Lock action received");
+        }
+
+        // Check for unlock action
+        if (jsonMessage.type === "Unlock") {
+            unlockReceived = true;
+            client.log("Unlock action received");
+        }
+
+        // After a few seconds, verify we got the actions
+        setTimeout(() => {
+            client.test("Lock/Unlock actions work", function() {
+                client.assert(lockReceived, "Should receive lock action");
+                client.assert(unlockReceived, "Should receive unlock action");
+            });
+            unsubscribe();
+        }, 2000);
+    });
+%}
+
+### WS-003: Client Ping Test
+WEBSOCKET {{wsUrl}}
+Content-Type: application/json
+
+{
+  "type": "Auth",
+  "token": "{{token}}",
+  "workspace": "{{workspaceId}}"
+}
+
+=== wait-for-server
+
+> {%
+    var pingReceived = false;
+    
+    response.body.onEachMessage((message, unsubscribe, output) => {
+        const jsonMessage = JSON.parse(message);
+        client.log("Received: " + JSON.stringify(jsonMessage));
+
+        // Respond to pings
+        if (jsonMessage.type === "Ping") {
+            output(JSON.stringify({
+                type: "Pong"
+            }));
+            
+            pingReceived = true;
+        }
+        
+        if (pingReceived) {
+            // Send this to close the ws oufdsodsoucoudsv
+            output("{\"type\": \"Disconnect\"}")
+            unsubscribe()
+        }
+        
+    }, () => {
+        client.test("Ping Received", () => {
+            client.assert(pingReceived, "Should receive ping");
+        })
+    });
+%}
