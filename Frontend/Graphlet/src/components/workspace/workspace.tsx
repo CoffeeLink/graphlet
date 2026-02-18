@@ -1,4 +1,4 @@
-import {useEffect, useRef, useState} from "react";
+import {useEffect, useRef, useState, useLayoutEffect} from "react";
 import "./workspace.css";
 
 // note data shape
@@ -275,7 +275,7 @@ type NoteCardProps = {
 function NoteCard({note, parentRef, offset, onDelete, onMove, onMoveEnd, onUpdate}: NoteCardProps){
     const [rect, setRect] = useState<DOMRect | null>(null);
     // get parent rect and update on resize
-    useEffect(()=>{
+    useLayoutEffect(()=>{
         function update(){
             if(parentRef?.current) setRect(parentRef.current.getBoundingClientRect());
         }
@@ -293,6 +293,12 @@ function NoteCard({note, parentRef, offset, onDelete, onMove, onMoveEnd, onUpdat
     function handleNoteMouseDown(e: React.MouseEvent){
         e.stopPropagation();
         if (e.button !== 0) return;
+        // If we're in edit mode or clicking an interactive element, don't start dragging.
+        // This allows selecting text inside inputs/textareas when editing.
+        const target = e.target as HTMLElement | null;
+        if (isEditing) return;
+        if (target && target.closest && target.closest('input,textarea,select,button,a')) return;
+
         draggingNoteRef.current = true;
         startMouseRef.current = { x: e.clientX, y: e.clientY };
         startPosRef.current = { x: note.x, y: note.y };
@@ -328,6 +334,7 @@ function NoteCard({note, parentRef, offset, onDelete, onMove, onMoveEnd, onUpdat
 
     useEffect(()=>{
         // sync edits when external note changes
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setEditTitle(note.title ?? '');
         setEditContent(note.content ?? '');
     }, [note.title, note.content]);
