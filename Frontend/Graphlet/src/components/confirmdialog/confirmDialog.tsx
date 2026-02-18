@@ -13,6 +13,7 @@ interface ConfirmDialogProps {
     cancelLabel?: string;
     isSubmitting?: boolean;
     error?: string | null;
+    confirmVariant?: "default" | "primary" | "danger";
 }
 
 export default function ConfirmDialog({
@@ -27,6 +28,7 @@ export default function ConfirmDialog({
     cancelLabel = "No",
     isSubmitting = false,
     error = null
+    , confirmVariant = "default"
 }: ConfirmDialogProps){
     const [localInput, setLocalInput] = useState(inputValue);
 
@@ -42,25 +44,30 @@ export default function ConfirmDialog({
     }
 
     return(
-        <section className="confirm-dialog">
-            <h2>{title}</h2>
-            {message && <p className="confirm-message">{message}</p>}
-            {showInput && (
+        <section className="confirm-dialog" onClick={(e) => { e.stopPropagation(); /* prevent clicks reaching parent workspace preview */ }}>
+            <div className="confirm-box">
+                <div className="header-row">
+                    <div className="header-title">{title}</div>
+                    <button className="header-close close-button" aria-label="Close" onClick={onCancel}>X</button>
+                </div>
+                {message && <p className="confirm-message">{message}</p>}
+                {showInput && (
+                    <p>
+                        <input
+                            type="text"
+                            value={localInput}
+                            onChange={e => { setLocalInput(e.target.value); if (onInputChange) onInputChange(e.target.value); }}
+                            disabled={isSubmitting}
+                            aria-label="Confirmation input"
+                        />
+                    </p>
+                )}
+                {error && <div className="confirm-error">{error}</div>}
                 <p>
-                    <input
-                        type="text"
-                        value={localInput}
-                        onChange={e => { setLocalInput(e.target.value); if (onInputChange) onInputChange(e.target.value); }}
-                        disabled={isSubmitting}
-                        aria-label="Confirmation input"
-                    />
+                    <button className={`confirm-button ${confirmVariant}`} onClick={handleConfirm} disabled={isSubmitting}>{isSubmitting ? (confirmLabel + "...") : confirmLabel}</button>
+                    <button onClick={onCancel} disabled={isSubmitting}>{cancelLabel}</button>
                 </p>
-            )}
-            {error && <div className="confirm-error">{error}</div>}
-            <p>
-                <button onClick={handleConfirm} disabled={isSubmitting}>{isSubmitting ? (confirmLabel + "...") : confirmLabel}</button>
-                <button onClick={onCancel} disabled={isSubmitting}>{cancelLabel}</button>
-            </p>
+            </div>
         </section>
     )
 }

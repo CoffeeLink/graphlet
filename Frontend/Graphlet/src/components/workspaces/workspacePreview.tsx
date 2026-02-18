@@ -88,9 +88,9 @@ export default function WorkspacePreview(props: WorkspacePreviewProps) {
                 <div style={{ position: "relative" }}>
                     <button aria-haspopup="menu" onClick={(e) => { e.stopPropagation(); setShowMenu(s => !s); }}>...</button>
                     {showMenu && (
-                        <div className="workspace-preview-menu" role="menu">
-                            <button role="menuitem" onClick={() => { setConfirmMode("rename"); setShowMenu(false); setRenameValue(props.name); }}>Rename</button>
-                            <button role="menuitem" onClick={() => { setConfirmMode("delete"); setShowMenu(false); }}>Delete</button>
+                        <div className="workspace-preview-menu" role="menu" onClick={(e) => e.stopPropagation()}>
+                            <button role="menuitem" onClick={(e) => { e.stopPropagation(); setConfirmMode("rename"); setShowMenu(false); setRenameValue(props.name); }}>Rename</button>
+                            <button role="menuitem" onClick={(e) => { e.stopPropagation(); setConfirmMode("delete"); setShowMenu(false); }}>Delete</button>
                         </div>
                     )}
                 </div>
@@ -98,7 +98,7 @@ export default function WorkspacePreview(props: WorkspacePreviewProps) {
 
             {confirmMode === "rename" && (
                 <ConfirmDialog
-                    title="Rename workspace"
+                    title="Renaming workspace"
                     showInput
                     inputValue={renameValue}
                     onInputChange={(v) => setRenameValue(v)}
@@ -108,12 +108,13 @@ export default function WorkspacePreview(props: WorkspacePreviewProps) {
                     cancelLabel="Cancel"
                     isSubmitting={isSubmitting}
                     error={error}
+                    confirmVariant={"primary"}
                 />
             )}
 
             {confirmMode === "delete" && (
                 <ConfirmDialog
-                    title="Delete workspace"
+                    title="Deleting workspace"
                     message="Are you sure you want to delete this workspace? This action cannot be undone."
                     onConfirm={handleDeleteConfirm}
                     onCancel={() => { setConfirmMode(null); setError(null); }}
@@ -121,6 +122,7 @@ export default function WorkspacePreview(props: WorkspacePreviewProps) {
                     cancelLabel="Cancel"
                     isSubmitting={isSubmitting}
                     error={error}
+                    confirmVariant={"danger"}
                 />
             )}
         </div>

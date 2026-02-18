@@ -1,8 +1,9 @@
-import {NavLink} from "react-router-dom";
+import {NavLink, useNavigate} from "react-router-dom";
 
 export default function SettingsLeft(){ //left side of settings page
+    const navigate = useNavigate()
     function goBack(){
-        window.history.back();
+        navigate("/workspaces")
     }
 
     return(

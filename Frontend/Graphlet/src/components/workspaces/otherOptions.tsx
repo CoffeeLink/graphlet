@@ -19,8 +19,6 @@ export default function OtherOptions() {
                 <Link to={"/settings"}>
                     <button>Settings</button>
                 </Link>
-                <button>Not defined</button>
-                <button>Not defined</button>
                 <button onClick={Logout}>Logout</button>
 
             </div>
