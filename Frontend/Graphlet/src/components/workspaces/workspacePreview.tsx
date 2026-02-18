@@ -37,8 +37,8 @@ export default function WorkspacePreview(props: WorkspacePreviewProps) {
                 } catch (err)
                 {
                     console.error("Failed to parse error response:", err);
+                    setError((errText)?? "Failed to rename workspace");
                 }
-                throw new Error(errText);
             }
             // success - inform parent
             if (props.onRename) props.onRename(props.id, newName);
@@ -68,8 +68,8 @@ export default function WorkspacePreview(props: WorkspacePreviewProps) {
                 }
                 catch (err) {
                     console.error("Failed to parse error response:", err);
+                    setError((errText)?? "Failed to rename workspace");
                 }
-                throw new Error(errText);
             }
             if (props.onDelete) props.onDelete(props.id);
             setConfirmMode(null);

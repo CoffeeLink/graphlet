@@ -23,7 +23,7 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
-    "no-explicit-any": false,
+    "noImplicitAny": false
   },
   "include": ["src"]
 }
