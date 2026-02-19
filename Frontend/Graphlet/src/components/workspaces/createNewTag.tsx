@@ -66,7 +66,7 @@ export function CreateNewTag({onClose}: CreatingNewProps) {
                 </tr>
                 <tr>
                     <td colSpan={2}>
-                        <button onClick={handleCreateNewTag}>Create Tag</button>
+                        <button onClick={()=>{handleCreateNewTag(); handleClose()}}>Create Tag</button>
                     </td>
                 </tr>
                 </tbody>

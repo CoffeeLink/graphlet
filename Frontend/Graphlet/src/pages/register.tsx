@@ -73,7 +73,7 @@ export default function Register() {
                     </tr>
                     <tr>
                         <td>Password:</td>
-                        <td><input type="password" className="passwordInput" required/></td>
+                        <td><input type="password" className="passwordInput" required onKeyDown={e=>{if(e.key === "Enter"){registerUser()}}}/></td>
                     </tr>
                     {error && <ErrorComponent error={errormsg}/>}
                     <tr>

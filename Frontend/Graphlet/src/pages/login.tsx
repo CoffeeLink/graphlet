@@ -74,7 +74,11 @@ export default function Login(){
                         </tr>
                         <tr>
                             <td>Password: </td>
-                            <td><input type="password" className="passwordInput" required /></td>
+                            <td><input type="password" className="passwordInput" required onKeyDown={e=>{
+                                if(e.key === "Enter"){
+                                    login();
+                                }
+                            }}/></td>
                         </tr>
                         {error && <ErrorComponent error={"Wrong email or password!"}/>}
                         <tr>

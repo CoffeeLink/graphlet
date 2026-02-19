@@ -13,19 +13,44 @@ export default function CreatingNewWokspace({ onClose }: CreatingNewProps) {
     console.log(tag);
 
     const [workspaceName, setWorkspaceName] = useState('')
-    async function handleCreateWorkspace(){
-        console.log(workspaceName);
+    const [creating, setCreating] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-        await  fetch("http://localhost:5188/api/workspace", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${localStorage.getItem("token")}`
-            },
-            body: JSON.stringify({
-                name: workspaceName
-            })
-        })
+    // Return true on success, false on failure
+    async function handleCreateWorkspace(): Promise<boolean> {
+        setCreating(true);
+        setError(null);
+        try {
+            const res = await fetch("http://localhost:5188/api/workspace", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem("token")}`
+                },
+                body: JSON.stringify({
+                    name: workspaceName
+                })
+            });
+
+            if (!res.ok) {
+                let msg = `Failed to create workspace: ${res.status} ${res.statusText}`;
+                try {
+                    const body = await res.json();
+                    if (body && body.message) msg = body.message;
+                } catch {
+                    // ignore
+                }
+                setError(msg);
+                return false;
+            }
+
+            return true;
+        } catch (e) {
+            setError((e as Error)?.message ?? 'Network error');
+            return false;
+        } finally {
+            setCreating(false);
+        }
     }
 
     function handleClose(){
@@ -66,13 +91,14 @@ export default function CreatingNewWokspace({ onClose }: CreatingNewProps) {
                         <td><input type="text" id={"nameInput"} value={workspaceName} onChange={(e) => setWorkspaceName(e.target.value)} /></td>
                     </tr>
                     <tr>
-                        <td>Tags</td>
+                        <td>Tags:</td>
                         <td className={"tag-container"}>  </td>
                         <td><button onClick={handleCreateNewTag}>Create new tag</button></td>
                     </tr>
                     </tbody>
                 </table>
-                <button onClick={handleCreateWorkspace} id={"create-new-workspace-button"}>Create new Workspace</button>
+                {error && <div className="create-error">{error}</div>}
+                <button onClick={async ()=>{ const ok = await handleCreateWorkspace(); if (ok) handleClose(); }} id={"create-new-workspace-button"} disabled={creating || workspaceName.trim() === ''}>{creating ? 'Creating...' : 'Create new Workspace'}</button>
                 {showCreateTag && <CreateNewTag onClose={onCloseCreate}/>}
             </div>
         </>

@@ -54,24 +54,26 @@ export default function Workspaces() {
     const openedWorkspaceId: string | null = initialWorkspaceId;
     const isFullscreenMode: boolean = isInitialFullscreen;
 
+    // Extracted loader so we can call it elsewhere
+    async function loadWorkspaces() {
+        setLoading(true);
+        setError(null);
+        try {
+            const data = await getWorkspaces();
+            setWorkspaces(data);
+        } catch (err) {
+            setError((err as Error)?.message ?? "Failed to load workspaces");
+        } finally {
+            setLoading(false);
+        }
+    }
+
     useEffect(() => {
         let mounted = true;
 
         async function load() {
             if (!mounted) return;
-            setLoading(true);
-            setError(null);
-
-            try {
-                const data = await getWorkspaces();
-                if (!mounted) return;
-                setWorkspaces(data);
-            } catch (err) {
-                if (!mounted) return;
-                setError((err as Error)?.message ?? "Failed to load workspaces");
-            } finally {
-                if (mounted) setLoading(false);
-            }
+            await loadWorkspaces();
         }
 
         load();
@@ -87,8 +89,10 @@ export default function Workspaces() {
         setShowCreatingNew(prev => !prev);
     }
 
-    function handleCloseCreatingNew() {
+    // Called when the creating-new dialog closes. Refresh the list to show newly created workspace.
+    async function handleCloseCreatingNew() {
         setShowCreatingNew(false);
+        await loadWorkspaces();
     }
 
     const filteredWorkspaces = workspaces.filter(w => {
