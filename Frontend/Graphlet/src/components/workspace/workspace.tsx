@@ -212,6 +212,9 @@ export default function Workspace({ workspaceId }: { workspaceId?: string }) {
             setNotes(prev => [ ...prev, note ]);
         }
     }
+    function handleWorkspaceClose(){
+        window.close();
+    }
 
     return (
         <section style={{height: '100%', display: 'flex', flexDirection: 'column'}}>
@@ -221,6 +224,7 @@ export default function Workspace({ workspaceId }: { workspaceId?: string }) {
                 {/* floating test toolbar on the canvas */}
                 <div className="floating-toolbar">
                     <button onClick={addTestNote} className="add-test-note-btn">Add new note</button>
+                    <button onClick={handleWorkspaceClose} className="workspace-close-btn">Close</button>
                 </div>
             </div>
 

@@ -10,6 +10,7 @@
   display: flex;
   align-items: center;
   padding: 12px;
+  position: relative; /* ensure absolute children (the floating toolbar) are positioned inside the toolbar */
 }
 .workspace-error{
   margin-left: 12px;
@@ -27,8 +28,13 @@
 .floating-toolbar{
   position: absolute;
   left: 16px;
+  right: 16px;
   top: 16px;
   z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 .floating-toolbar .add-test-note-btn{
   width: 150px;
@@ -37,6 +43,16 @@
   border-radius: 6px;
   border: none;
   cursor: pointer;
+}
+
+/* close button styling */
+.workspace-close-btn{
+  border: 2px solid red;
+  padding: 10px 20px;
+
+  border-radius: 4px;
+  cursor: pointer;
+  align-self: center;
 }
 
 .note{
@@ -92,3 +108,7 @@
 /* small utilities */
 .cursor-grab{ cursor: grab; }
 .cursor-grabbing{ cursor: grabbing; }
+
+.btn-close-workspace{
+  display: flex;
+}
