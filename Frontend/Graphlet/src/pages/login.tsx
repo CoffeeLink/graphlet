@@ -14,7 +14,7 @@ export default function Login(){
 
 
     async function login(){
-        const emailInput = document.querySelector(".usernameInput") as HTMLInputElement | null;
+        const emailInput = document.querySelector(".emailInput") as HTMLInputElement | null;
         const passwordInput = document.querySelector(".passwordInput") as HTMLInputElement | null;
         setError(false);
         if(!emailInput?.value || !passwordInput?.value ) {
@@ -39,8 +39,6 @@ export default function Login(){
         })
         const res = await rawRes.json();
 
-        console.log("helo");
-        console.log(rawRes)
         console.log(res.status)
         let token ="";
         if(rawRes.status === 200){
@@ -70,7 +68,7 @@ export default function Login(){
                     <tbody>
                         <tr>
                             <td>Email: </td>
-                            <td><input type="email" className="usernameInput" required /></td>
+                            <td><input type="email" className="emailInput" required /></td>
                         </tr>
                         <tr>
                             <td>Password: </td>
@@ -82,10 +80,10 @@ export default function Login(){
                         </tr>
                         {error && <ErrorComponent error={"Wrong email or password!"}/>}
                         <tr>
-                            <td colSpan={2}><button onClick={login} disabled={loading}>{loading ? 'Working...' : 'Login'}</button></td>
+                            <td colSpan={2}><button onClick={login} disabled={loading} id={"loginButton"}>{loading ? 'Working...' : 'Login'}</button></td>
                         </tr>
                         <tr>
-                            <td colSpan={2}><a href="/register">Don't have an account? Register here!</a></td>
+                            <td colSpan={2}><a href="/register" id={"registerLink"}>Don't have an account? Register here!</a></td>
                         </tr>
                     </tbody>
                 </table>

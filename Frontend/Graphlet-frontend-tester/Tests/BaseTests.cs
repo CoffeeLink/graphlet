@@ -11,21 +11,17 @@ namespace Graphlet_frontend_tester.Tests
     {
         protected IWebDriver driver;
         protected LoginPage loginPage;
+        protected RegisterPage registerPage;
 
         [SetUp]
         public void Setup()
         {
             driver = new ChromeDriver();
             driver.Manage().Window.Maximize();
-            driver.Url = "http://localhost:5173/";
+            driver.Url = DefaultValues.base_url;
 
             loginPage = new LoginPage(driver);
-        }
-
-        [Test]
-        public void Open()
-        {
-            
+            registerPage = new RegisterPage(driver);
         }
 
 

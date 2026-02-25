@@ -7,9 +7,9 @@ namespace Graphlet_frontend_tester.GraphletPages
 {
     public class LoginPage:BasePage
     {
-        public static readonly string URL = "http://localhost:5173/login";
+        public static readonly string URL = DefaultValues.base_url+"login";
 
-        IWebElement emailField => driver.FindElement(By.ClassName("usernameInput"));
+        IWebElement emailField => driver.FindElement(By.ClassName("emailInput"));
         IWebElement passwordField => driver.FindElement(By.ClassName("passwordInput"));
         IWebElement loginButton => driver.FindElement(By.Id("loginButton"));
         IWebElement registerLink => driver.FindElement(By.Id("registerLink"));

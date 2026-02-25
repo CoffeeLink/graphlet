@@ -19,7 +19,7 @@ export function CreateNewTag({onClose}: CreatingNewProps) {
     async function handleCreateNewTag() {
         setError(false);
         try {
-            const rawRes = await fetch("http://localhost:5188/", {
+            const rawRes = await fetch("http://localhost:5188/api/workspace/", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -34,7 +34,7 @@ export function CreateNewTag({onClose}: CreatingNewProps) {
                 //gettags in the parent component
             }
             else {
-                console.error("Failed to create tag, status code:", rawRes.status);
+                console.error( "Failed to create tag, status code:", rawRes.status);
             }
             console.log("Creating tag:", {tagName, color});
 

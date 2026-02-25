@@ -56,6 +56,7 @@ export default function Register() {
         }
     }
 
+
     return (
         <section className="register-section fg">
             <h1>Register</h1>
@@ -78,12 +79,12 @@ export default function Register() {
                     {error && <ErrorComponent error={errormsg}/>}
                     <tr>
                         <td colSpan={2}>
-                            <button onClick={registerUser}
+                            <button onClick={registerUser} className={"registerButton"}
                                     disabled={loading}>{loading ? 'Working...' : 'Register'}</button>
                         </td>
                     </tr>
                     <tr>
-                        <td colSpan={2}><a href="/login">Already have an account? Login here!</a></td>
+                        <td colSpan={2}><a href="/login" id={"loginLink"}>Already have an account? Login here!</a></td>
                     </tr>
                     </tbody>
                 </table>
