@@ -25,6 +25,8 @@ builder.Services.AddScoped<IAuthRepository, EfAuthRepository>();
 builder.Services.AddScoped<IWorkspaceRepository, EfWorkspaceRepository>();
 builder.Services.AddScoped<ITagRepository, EfTagRepository>();
 builder.Services.AddScoped<INoteRepository, EfNoteRepository>();
+builder.Services.AddScoped<IAccessRepository, EfAccessRepository>();
+builder.Services.AddScoped<IOrganizationRepository, EfOrganizationRepository>();
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
