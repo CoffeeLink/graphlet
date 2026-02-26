@@ -17,9 +17,9 @@ export default function OtherOptions() {
         <section className="other-options fg">
             <div>
                 <Link to={"/settings"}>
-                    <button>Settings</button>
+                    <button id="settings-button">Settings</button>
                 </Link>
-                <button onClick={Logout}>Logout</button>
+                <button id="logout-button" onClick={Logout}>Logout</button>
 
             </div>
         </section>

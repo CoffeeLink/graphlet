@@ -12,6 +12,8 @@ namespace Graphlet_frontend_tester.Tests
         protected IWebDriver driver;
         protected LoginPage loginPage;
         protected RegisterPage registerPage;
+        protected WorkspacesPage workspacesPage;
+        protected SettingsPage settingsPage;
 
         [SetUp]
         public void Setup()
@@ -22,6 +24,8 @@ namespace Graphlet_frontend_tester.Tests
 
             loginPage = new LoginPage(driver);
             registerPage = new RegisterPage(driver);
+            workspacesPage = new WorkspacesPage(driver);
+            settingsPage = new SettingsPage(driver);
         }
 
 

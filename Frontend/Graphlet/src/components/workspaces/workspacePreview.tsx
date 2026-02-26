@@ -83,14 +83,14 @@ export default function WorkspacePreview(props: WorkspacePreviewProps) {
 
     return (
         <div className="workspacePreview">
-            <div className="workspace-preview" onClick={props.onOpen}>
+            <div className="workspace-preview" id={`workspace-card-${props.id}`} onClick={props.onOpen}>
                 <p style={{ color: "black" }}>{renameValue}</p>
                 <div style={{ position: "relative" }}>
-                    <button aria-haspopup="menu" onClick={(e) => { e.stopPropagation(); setShowMenu(s => !s); }}>...</button>
+                    <button id={`workspace-menu-button-${props.id}`} aria-haspopup="menu" onClick={(e) => { e.stopPropagation(); setShowMenu(s => !s); }}>...</button>
                     {showMenu && (
                         <div className="workspace-preview-menu" role="menu" onClick={(e) => e.stopPropagation()}>
-                            <button role="menuitem" onClick={(e) => { e.stopPropagation(); setConfirmMode("rename"); setShowMenu(false); setRenameValue(props.name); }}>Rename</button>
-                            <button role="menuitem" onClick={(e) => { e.stopPropagation(); setConfirmMode("delete"); setShowMenu(false); }}>Delete</button>
+                            <button id={`workspace-rename-button-${props.id}`} role="menuitem" onClick={(e) => { e.stopPropagation(); setConfirmMode("rename"); setShowMenu(false); setRenameValue(props.name); }}>Rename</button>
+                            <button id={`workspace-delete-button-${props.id}`} role="menuitem" onClick={(e) => { e.stopPropagation(); setConfirmMode("delete"); setShowMenu(false); }}>Delete</button>
                         </div>
                     )}
                 </div>

@@ -64,8 +64,8 @@ export default function ConfirmDialog({
                 )}
                 {error && <div className="confirm-error">{error}</div>}
                 <p>
-                    <button className={`confirm-button ${confirmVariant}`} onClick={handleConfirm} disabled={isSubmitting}>{isSubmitting ? (confirmLabel + "...") : confirmLabel}</button>
-                    <button onClick={onCancel} disabled={isSubmitting}>{cancelLabel}</button>
+                    <button id="confirm-dialog-confirm-button" className={`confirm-button ${confirmVariant}`} onClick={handleConfirm} disabled={isSubmitting}>{isSubmitting ? (confirmLabel + "...") : confirmLabel}</button>
+                    <button id="confirm-dialog-cancel-button" onClick={onCancel} disabled={isSubmitting}>{cancelLabel}</button>
                 </p>
             </div>
         </section>

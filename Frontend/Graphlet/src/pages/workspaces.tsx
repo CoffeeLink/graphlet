@@ -128,9 +128,9 @@ export default function Workspaces() {
             <div className="workspaces-page popup-bg">
                 <header className={"workspaces-header"}>
                     <h2>My workspaces</h2>
-                    <button type="button" onClick={handleCreateNewClick}>Create new</button>
-                    <p>Keresés <input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Search workspaces..."/></p>
-                    <button onClick={handleOtherOptionsClick}>...</button>
+                    <button type="button" id="create-new-button" onClick={handleCreateNewClick}>Create new</button>
+                    <p>Keresés <input type="text" id="search-workspaces-input" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Search workspaces..."/></p>
+                    <button id="other-options-button" onClick={handleOtherOptionsClick}>...</button>
                     {showOtherOptions && <OtherOptions/>}
                 </header>
                 <main>

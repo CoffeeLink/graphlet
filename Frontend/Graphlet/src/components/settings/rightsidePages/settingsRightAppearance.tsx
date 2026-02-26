@@ -5,7 +5,7 @@ export default function SettingsRightApperance(){
     return(
         <>
             <h1>Appearance</h1>
-            <div><p>Dark mode</p><input type={"checkbox"}/></div>
+            <div><p>Dark mode</p><input id="dark-mode-checkbox" type={"checkbox"}/></div>
         </>
     )
 }
