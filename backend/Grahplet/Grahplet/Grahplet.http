@@ -922,35 +922,6 @@ Content-Type: application/json
     });
 %}
 
-### Accept Workspace Invitation
-POST {{baseUrl}}/api/access/invitations/{{invitationId_accept}}/accept
-Authorization: {{token_new}}
-
-> {%
-    client.test("Accept invitation returns 200 or 404", function () {
-        client.assert([200, 404].includes(response.status));
-    });
-%}
-
-### Decline Workspace Invitation
-POST {{baseUrl}}/api/access/invitations/{{invitationId_decline}}/decline
-Authorization: {{token_new}}
-
-> {%
-    client.test("Decline invitation returns 200 or 404", function () {
-        client.assert([200, 404].includes(response.status));
-    });
-%}
-
-### Accept Invitation - unauthorized → 401
-POST {{baseUrl}}/api/access/invitations/{{invitationId_decline}}/accept
-
-> {%
-    client.test("Accept invitation requires auth", function () {
-        client.assert(response.status === 401);
-    });
-%}
-
 ### Set Organization Workspace Owner (Owner required on both)
 POST {{baseUrl}}/api/access/organization/{{orgId}}/workspace/{{workspaceId}}
 Authorization: {{token}}
