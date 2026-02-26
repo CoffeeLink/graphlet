@@ -131,7 +131,7 @@ export default function Workspace({ workspaceId }: { workspaceId?: string }) {
                 Authorization: `Bearer ${localStorage.getItem("token")}`
             }
         });
-        if(res.status !== 200){
+        if(res.status !== 204){
             setErrorText("Couldn't delete note:" + res.status);
         } else {
             setNotes(n => n.filter(note => note.id !== id));
@@ -219,12 +219,12 @@ export default function Workspace({ workspaceId }: { workspaceId?: string }) {
     return (
         <section style={{height: '100%', display: 'flex', flexDirection: 'column'}}>
             {/* toolbar */}
-            <div className="workspace-toolbar">
-                <div className="workspace-error">{errorText}</div>
+            <div id="workspace-toolbar" className="workspace-toolbar">
+                <div id="workspace-error" className="workspace-error">{errorText}</div>
                 {/* floating test toolbar on the canvas */}
                 <div className="floating-toolbar">
-                    <button onClick={addTestNote} className="add-test-note-btn">Add new note</button>
-                    <button onClick={handleWorkspaceClose} className="workspace-close-btn">Close</button>
+                    <button id="add-new-note-btn" onClick={addTestNote} className="add-test-note-btn">Add new note</button>
+                    <button id="workspace-close-btn" onClick={handleWorkspaceClose} className="workspace-close-btn">Close</button>
                 </div>
             </div>
 
@@ -363,6 +363,7 @@ function NoteCard({note, parentRef, offset, onDelete, onMove, onMoveEnd, onUpdat
 
     return (
         <div
+            id={`note-card-${note.id}`}
             className="note"
             style={{ left: nx, top: ny }}
             onMouseDown={handleNoteMouseDown}
@@ -373,7 +374,7 @@ function NoteCard({note, parentRef, offset, onDelete, onMove, onMoveEnd, onUpdat
         >
             <div className="note-header">
                 <strong className="note-title">{note.title ?? 'Untitled'}</strong>
-                <button onClick={(e)=>{ e.stopPropagation(); onDelete(); }} className="note-delete-button">✕</button>
+                <button id={`note-delete-btn-${note.id}`} onClick={(e)=>{ e.stopPropagation(); onDelete(); }} className="note-delete-button">✕</button>
             </div>
 
             {!isEditing ? (
@@ -382,11 +383,11 @@ function NoteCard({note, parentRef, offset, onDelete, onMove, onMoveEnd, onUpdat
                 </div>
             ) : (
                 <div className="note-edit">
-                    <input value={editTitle} onChange={e=>setEditTitle(e.target.value)} />
-                    <textarea value={editContent} onChange={e=>setEditContent(e.target.value)} />
+                    <input id={`note-title-input-${note.id}`} value={editTitle} onChange={e=>setEditTitle(e.target.value)} />
+                    <textarea id={`note-content-input-${note.id}`} value={editContent} onChange={e=>setEditContent(e.target.value)} />
                     <div className="controls">
-                        <button onClick={submitEdit}>Save</button>
-                        <button onClick={(e)=>{ e.stopPropagation(); setIsEditing(false); }}>Cancel</button>
+                        <button id={`note-save-btn-${note.id}`} onClick={submitEdit}>Save</button>
+                        <button id={`note-cancel-btn-${note.id}`} onClick={(e)=>{ e.stopPropagation(); setIsEditing(false); }}>Cancel</button>
                     </div>
                 </div>
             )}

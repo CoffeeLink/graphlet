@@ -1,7 +1,6 @@
 import "./createNewWorkspace.css"
 import {useState} from "react";
 import {Tag} from "./tag.tsx";
-import {CreateNewTag} from "./createNewTag.tsx";
 
 interface CreatingNewProps {
     onClose?: () => void;
@@ -57,25 +56,7 @@ export default function CreatingNewWokspace({ onClose }: CreatingNewProps) {
         if (onClose) onClose();
     }
 
-    const [showCreateTag, setShowCreateTag] = useState(false);
-    function handleCreateNewTag() {
-        setShowCreateTag(perv => !perv);
-    }
-    function onCloseCreate() {
-        setShowCreateTag(false);
-        getTags();
-    }
 
-    async function getTags(){
-       //kell endpoint
-       //  const rawres = await fetch("http://localhost:5188/api/userTags", {
-       //      method: "GET",
-       //      headers: {
-       //
-       //      }
-       //  })
-
-    }
 
     return (
         <>
@@ -90,16 +71,10 @@ export default function CreatingNewWokspace({ onClose }: CreatingNewProps) {
                         <td >Workspace name:</td>
                         <td><input type="text" id={"nameInput"} value={workspaceName} onChange={(e) => setWorkspaceName(e.target.value)} /></td>
                     </tr>
-                    <tr>
-                        <td>Tags:</td>
-                        <td className={"tag-container"}>  </td>
-                        <td><button onClick={handleCreateNewTag}>Create new tag</button></td>
-                    </tr>
                     </tbody>
                 </table>
                 {error && <div className="create-error">{error}</div>}
                 <button onClick={async ()=>{ const ok = await handleCreateWorkspace(); if (ok) handleClose(); }} id={"create-new-workspace-button"} disabled={creating || workspaceName.trim() === ''}>{creating ? 'Creating...' : 'Create new Workspace'}</button>
-                {showCreateTag && <CreateNewTag onClose={onCloseCreate}/>}
             </div>
         </>
     );

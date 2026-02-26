@@ -276,6 +276,40 @@ namespace Graphlet_frontend_tester.Tests
             int countAfter = workspacesPage.GetWorkspaceCards().Count;
             Assert.That(countAfter, Is.EqualTo(countBefore));
         }
+
+        [Test]
+        public void OpenWorkspaceShouldOpenInNewTab()
+        {
+            string name = TrackWorkspace("OpenWS_" + DateTime.Now.ToString("HHmmssfff"));
+            workspacesPage.CreateWorkspace(name);
+            Thread.Sleep(1500);
+
+            var cards = driver.FindElements(By.CssSelector(".workspacePreview"));
+            IWebElement? targetCard = cards.FirstOrDefault(c => c.Text.Contains(name));
+            Assert.That(targetCard, Is.Not.Null, "Created workspace not found in list");
+
+            IWebElement menuBtn = targetCard!.FindElement(By.CssSelector("[id^='workspace-menu-button-']"));
+            string wsId = menuBtn.GetAttribute("id")!.Replace("workspace-menu-button-", "");
+
+            int beforeCount = driver.WindowHandles.Count;
+
+            // Click the workspace preview card to open it in a new tab
+            driver.FindElement(By.Id($"workspace-card-{wsId}")).Click();
+            Thread.Sleep(1000);
+
+            var handles = driver.WindowHandles;
+            Assert.That(handles.Count, Is.GreaterThan(beforeCount), "A new tab/window should have been opened");
+
+            string newHandle = handles.Last();
+            // Switch to the new tab/window and verify URL
+            driver.SwitchTo().Window(newHandle);
+            Thread.Sleep(300);
+            Assert.That(driver.Url.Contains($"workspaceId={wsId}"), Is.True, "New window URL should contain workspaceId");
+            Assert.That(driver.Url.Contains("fullscreen=1"), Is.True, "New window URL should contain fullscreen=1 flag");
+
+            // Close the opened tab and switch back to original
+            driver.Close();
+            driver.SwitchTo().Window(handles.First());
+        }
     }
 }
-
