@@ -145,8 +145,28 @@ namespace Graphlet_frontend_tester.GraphletPages
             var actions = new Actions(driver);
             actions.MoveToElement(card).ClickAndHold().MoveByOffset(offsetX, offsetY).Release().Perform();
 
-            
-            
+            wait.Until(d =>
+            {
+                var after = GetNotePosition(noteId);
+                return Math.Abs(after.left - before.left) >= 5 || Math.Abs(after.top - before.top) >= 5;
+            });
+        }
+
+        /// <summary>
+        /// Get the note card's stored position from its inline CSS style (left, top).
+        /// This is more reliable than getBoundingClientRect across page reloads because
+        /// it reads what the backend actually persisted rather than viewport-relative coords.
+        /// </summary>
+        public (double left, double top) GetNoteStylePosition(string noteId)
+        {
+            IWebElement card = driver.FindElement(By.Id($"note-card-{noteId}"));
+            var js = (IJavaScriptExecutor)driver;
+            var dict = (Dictionary<string, object>)js.ExecuteScript(
+                "var s = arguments[0].style;" +
+                "return {left: parseFloat(s.left) || 0, top: parseFloat(s.top) || 0};",
+                card
+            );
+            return (Convert.ToDouble(dict["left"]), Convert.ToDouble(dict["top"]));
         }
     }
 }

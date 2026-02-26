@@ -7,7 +7,7 @@ interface CreatingNewProps {
     onClose?: () => void;
 }
 
-export function CreateNewTag({onClose}: CreatingNewProps) {
+export function         CreateNewTag({onClose}: CreatingNewProps) {
     const [error, setError] = useState(false);
     const [color, setColor] = useState("gray");
     const [tagName, setTagName] = useState("tag");

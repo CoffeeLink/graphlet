@@ -28,7 +28,7 @@ namespace Graphlet_frontend_tester.Tests
             loginPage.Login("demo@example.com", "demo");
             var loginWait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
             loginWait.Until(d => d.Url.Contains("workspaces"));
-            Thread.Sleep(300);
+            Thread.Sleep(100);
 
             // Create a dedicated workspace for this test
             _helperWorkspaceName = "WSTest_" + DateTime.Now.ToString("yyyyMMddHHmmssfff");
@@ -431,10 +431,10 @@ namespace Graphlet_frontend_tester.Tests
             string originalTitle = workspacePage.GetNoteTitle(noteId);
 
             workspacePage.DoubleClickNote(noteId);
-            Thread.Sleep(300);
+            Thread.Sleep(100);
             workspacePage.SetNoteTitle(noteId, "ShouldNotBeSaved_" + DateTime.Now.Ticks);
             workspacePage.CancelNoteEdit(noteId);
-            Thread.Sleep(300);
+            Thread.Sleep(100);
 
             Assert.That(workspacePage.GetNoteTitle(noteId), Is.EqualTo(originalTitle));
         }
@@ -454,6 +454,60 @@ namespace Graphlet_frontend_tester.Tests
             Thread.Sleep(100);
 
             Assert.That(workspacePage.GetNoteContent(noteId), Is.EqualTo(originalContent));
+        }
+
+        // ── Note position persistence ────────────────────────────────────────
+
+        [Test]
+        public void MovedNoteShouldKeepPositionAfterReload()
+        {
+            workspacePage.ClickAddNote();
+            Thread.Sleep(200);
+            string noteId = workspacePage.GetNoteId(workspacePage.GetNoteCards().Last());
+
+            workspacePage.MoveNote(noteId, 150, 80);
+            Thread.Sleep(600); // allow backend to persist the new position
+
+            var before = workspacePage.GetNoteStylePosition(noteId);
+
+            // Reload the workspace page
+            string wsUrl = DefaultValues.base_url + $"workspaces?workspaceId={Uri.EscapeDataString(_helperWorkspaceId!)}&fullscreen=1";
+            driver.Url = wsUrl;
+            Thread.Sleep(600);
+
+            var after = workspacePage.GetNoteStylePosition(noteId);
+
+            Assert.That(Math.Abs(after.left - before.left), Is.LessThanOrEqualTo(2),
+                "Note left position should be preserved after reload");
+            Assert.That(Math.Abs(after.top - before.top), Is.LessThanOrEqualTo(2),
+                "Note top position should be preserved after reload");
+        }
+
+        [Test]
+        public void MovedNoteShouldNotRevertToDefaultPositionAfterReload()
+        {
+            workspacePage.ClickAddNote();
+            Thread.Sleep(200);
+            string noteId = workspacePage.GetNoteId(workspacePage.GetNoteCards().Last());
+
+            // Record the default (pre-move) position
+            var defaultPos = workspacePage.GetNoteStylePosition(noteId);
+
+            workspacePage.MoveNote(noteId, 150, 80);
+            Thread.Sleep(600); // allow backend to persist the new position
+
+            // Reload the workspace page
+            string wsUrl = DefaultValues.base_url + $"workspaces?workspaceId={Uri.EscapeDataString(_helperWorkspaceId!)}&fullscreen=1";
+            driver.Url = wsUrl;
+            Thread.Sleep(600);
+
+            var afterReload = workspacePage.GetNoteStylePosition(noteId);
+
+            Assert.That(
+                Math.Abs(afterReload.left - defaultPos.left) > 2 ||
+                Math.Abs(afterReload.top - defaultPos.top) > 2,
+                "Note should not revert to its default position after reload"
+            );
         }
 
         // ── Close button ─────────────────────────────────────────────────────

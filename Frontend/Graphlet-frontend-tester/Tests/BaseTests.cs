@@ -29,6 +29,7 @@ namespace Graphlet_frontend_tester.Tests
             options.AddArgument("--disable-save-password-bubble");
             // Remove automation flags and extension which sometimes trigger UI changes
             options.AddExcludedArgument("enable-automation");
+            options.AddArgument("--headless=new");
             try
             {
                 options.AddAdditionalOption("useAutomationExtension", false);

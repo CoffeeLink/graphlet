@@ -15,7 +15,7 @@ namespace Graphlet_frontend_tester.Tests
             loginPage.Login("demo@example.com", "demo");
             var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
             wait.Until(d => d.Url.Contains("workspaces"));
-            Thread.Sleep(300);
+            Thread.Sleep(100);
             driver.Url = SettingsPage.AppearanceURL;
             Thread.Sleep(400);
         }
@@ -47,9 +47,9 @@ namespace Graphlet_frontend_tester.Tests
         {
             // navigate away first
             settingsPage.GoToProfile();
-            Thread.Sleep(300);
+            Thread.Sleep(100);
             settingsPage.GoToAppearance();
-            Thread.Sleep(300);
+            Thread.Sleep(100);
             Assert.That(driver.Url, Does.Contain("appearance"));
         }
 
@@ -57,7 +57,7 @@ namespace Graphlet_frontend_tester.Tests
         public void ClickProfileNavShouldNavigateToProfile()
         {
             settingsPage.GoToProfile();
-            Thread.Sleep(300);
+            Thread.Sleep(100);
             Assert.That(driver.Url, Does.Contain("profile"));
         }
 
@@ -65,7 +65,7 @@ namespace Graphlet_frontend_tester.Tests
         public void ClickSharedNavShouldNavigateToShared()
         {
             settingsPage.GoToShared();
-            Thread.Sleep(300);
+            Thread.Sleep(100);
             Assert.That(driver.Url, Does.Contain("shared"));
         }
 
@@ -73,7 +73,7 @@ namespace Graphlet_frontend_tester.Tests
         public void ClickSubscriptionNavShouldNavigateToSubscription()
         {
             settingsPage.GoToSubscription();
-            Thread.Sleep(300);
+            Thread.Sleep(100);
             Assert.That(driver.Url, Does.Contain("subscription"));
         }
 
@@ -83,7 +83,7 @@ namespace Graphlet_frontend_tester.Tests
         public void AppearancePageShouldShowDarkModeCheckbox()
         {
             settingsPage.GoToAppearance();
-            Thread.Sleep(300);
+            Thread.Sleep(100);
             Assert.That(settingsPage.IsDarkModeCheckboxPresent(), Is.True);
         }
 
@@ -102,7 +102,7 @@ namespace Graphlet_frontend_tester.Tests
         public void ProfilePageShouldHaveCorrectHeading()
         {
             settingsPage.GoToProfile();
-            Thread.Sleep(300);
+            Thread.Sleep(100);
             IWebElement heading = driver.FindElement(By.CssSelector(".settings-right h1"));
             Assert.That(heading.Text, Is.EqualTo("Profile Settings"));
         }
@@ -113,7 +113,7 @@ namespace Graphlet_frontend_tester.Tests
         public void SharedItemsPageShouldHaveCorrectHeading()
         {
             settingsPage.GoToShared();
-            Thread.Sleep(300);
+            Thread.Sleep(100);
             IWebElement heading = driver.FindElement(By.CssSelector(".settings-right h1"));
             Assert.That(heading.Text, Is.EqualTo("Shared Items"));
         }
@@ -124,7 +124,7 @@ namespace Graphlet_frontend_tester.Tests
         public void SubscriptionPageShouldHaveCorrectHeading()
         {
             settingsPage.GoToSubscription();
-            Thread.Sleep(300);
+            Thread.Sleep(100);
             IWebElement heading = driver.FindElement(By.CssSelector(".settings-right h1"));
             Assert.That(heading.Text, Is.EqualTo("Subscription"));
         }

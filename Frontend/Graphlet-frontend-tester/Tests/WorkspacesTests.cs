@@ -20,7 +20,7 @@ namespace Graphlet_frontend_tester.Tests
             // Wait until redirect to workspaces completes
             var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
             wait.Until(d => d.Url.Contains("workspaces"));
-            Thread.Sleep(300);
+            Thread.Sleep(100);
         }
 
         // Helper: register a workspace name for cleanup
@@ -112,7 +112,7 @@ namespace Graphlet_frontend_tester.Tests
             Thread.Sleep(1500);
 
             workspacesPage.SearchWorkspace(unique);
-            Thread.Sleep(300);
+            Thread.Sleep(100);
 
             var cards = workspacesPage.GetWorkspaceCards();
             Assert.That(cards.Count, Is.GreaterThan(0));
@@ -123,7 +123,7 @@ namespace Graphlet_frontend_tester.Tests
         public void SearchWithNonExistingTermShouldShowNoWorkspaces()
         {
             workspacesPage.SearchWorkspace("ZZZNOTEXIST_XYZ_99999");
-            Thread.Sleep(300);
+            Thread.Sleep(100);
 
             var cards = workspacesPage.GetWorkspaceCards();
             Assert.That(cards.Count, Is.EqualTo(0));
@@ -219,7 +219,7 @@ namespace Graphlet_frontend_tester.Tests
             workspacesPage.ClickRenameWorkspace(wsId);
             Thread.Sleep(200);
             workspacesPage.CancelDialog();
-            Thread.Sleep(300);
+            Thread.Sleep(100);
 
             var updatedCards = workspacesPage.GetWorkspaceCards();
             bool found = updatedCards.Any(c => c.Text.Contains(original));
@@ -271,7 +271,7 @@ namespace Graphlet_frontend_tester.Tests
             workspacesPage.ClickDeleteWorkspace(wsId);
             Thread.Sleep(200);
             workspacesPage.CancelDialog();
-            Thread.Sleep(300);
+            Thread.Sleep(100);
 
             int countAfter = workspacesPage.GetWorkspaceCards().Count;
             Assert.That(countAfter, Is.EqualTo(countBefore));
@@ -303,7 +303,7 @@ namespace Graphlet_frontend_tester.Tests
             string newHandle = handles.Last();
             // Switch to the new tab/window and verify URL
             driver.SwitchTo().Window(newHandle);
-            Thread.Sleep(300);
+            Thread.Sleep(100);
             Assert.That(driver.Url.Contains($"workspaceId={wsId}"), Is.True, "New window URL should contain workspaceId");
             Assert.That(driver.Url.Contains("fullscreen=1"), Is.True, "New window URL should contain fullscreen=1 flag");
 
