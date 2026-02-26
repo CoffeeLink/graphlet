@@ -571,6 +571,448 @@ Authorization: {{token}}
     });
 %}
 
+### List Organizations
+GET {{baseUrl}}/api/organization
+Authorization: {{token}}
+
+> {%
+    client.test("List organizations returns 200 with valid auth", function () {
+        client.assert(response.status === 200);
+        client.assert(Array.isArray(response.body), "Expected array of organizations");
+    });
+%}
+
+### List Organizations - unauthorized → 401
+GET {{baseUrl}}/api/organization
+
+> {%
+    client.test("List organizations requires auth", function () {
+        client.assert(response.status === 401);
+    });
+%}
+
+### Create Organization
+POST {{baseUrl}}/api/organization
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "name": "Test Organization {{$timestamp}}"
+}
+
+> {%
+    if (response.status === 201) {
+        client.global.set("orgId", response.body.id);
+    }
+    client.test("Create organization returns 201 and id", function () {
+        client.assert(response.status === 201);
+        client.assert(!!response.body.id, "Organization id should be present");
+        client.assert(!!response.body.name, "Organization name should be present");
+    });
+%}
+
+### Create Organization - bad request (missing name) → 400
+POST {{baseUrl}}/api/organization
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+}
+
+> {%
+    client.test("Create organization fails with 400 when name missing", function () {
+        client.assert(response.status === 400);
+    });
+%}
+
+### Get Organization
+GET {{baseUrl}}/api/organization/{{orgId}}
+Authorization: {{token}}
+
+> {%
+    client.test("Get organization returns 200 for existing id", function () {
+        client.assert(response.status === 200);
+        client.assert(!!response.body.id, "Organization id should be present");
+        client.assert(!!response.body.name, "Organization name should be present");
+    });
+%}
+
+### Get Organization - not found → 404
+GET {{baseUrl}}/api/organization/{{missingId}}
+Authorization: {{token}}
+
+> {%
+    client.test("Get organization returns 404 for non-existing id", function () {
+        client.assert(response.status === 404);
+    });
+%}
+
+### Get Organization - unauthorized → 401
+GET {{baseUrl}}/api/organization/{{orgId}}
+
+> {%
+    client.test("Get organization requires auth", function () {
+        client.assert(response.status === 401);
+    });
+%}
+
+### Update Organization
+PUT {{baseUrl}}/api/organization/{{orgId}}
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "name": "Updated Organization Name"
+}
+
+> {%
+    client.test("Update organization returns 200 for existing id", function () {
+        client.assert(response.status === 200);
+        client.assert(response.body.name === "Updated Organization Name", "Name should be updated");
+    });
+%}
+
+### Update Organization - not found → 404
+PUT {{baseUrl}}/api/organization/{{missingId}}
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "name": "Should Not Work"
+}
+
+> {%
+    client.test("Update organization returns 404 for non-existing id", function () {
+        client.assert([404, 403].includes(response.status));
+    });
+%}
+
+### Get Organization Workspaces
+GET {{baseUrl}}/api/organization/{{orgId}}/workspaces
+Authorization: {{token}}
+
+> {%
+    client.test("Get organization workspaces returns 200 and array", function () {
+        client.assert(response.status === 200);
+        client.assert(Array.isArray(response.body), "Expected array of workspace IDs");
+    });
+%}
+
+### Get Organization Workspaces - unauthorized → 401
+GET {{baseUrl}}/api/organization/{{orgId}}/workspaces
+
+> {%
+    client.test("Get organization workspaces requires auth", function () {
+        client.assert(response.status === 401);
+    });
+%}
+
+### Get My Workspace Access
+GET {{baseUrl}}/api/access/workspace/{{workspaceId}}
+Authorization: {{token}}
+
+> {%
+    client.test("Get workspace access returns 200 or 404", function () {
+        client.assert([200, 404].includes(response.status));
+        if (response.status === 200) {
+            client.assert(!!response.body.userId, "UserId should be present");
+            client.assert(!!response.body.workspaceId, "WorkspaceId should be present");
+            client.assert(!!response.body.accessLevel, "AccessLevel should be present");
+        }
+    });
+%}
+
+### Get My Workspace Access - unauthorized → 401
+GET {{baseUrl}}/api/access/workspace/{{workspaceId}}
+
+> {%
+    client.test("Get workspace access requires auth", function () {
+        client.assert(response.status === 401);
+    });
+%}
+
+### List Workspace Access (Admin required)
+GET {{baseUrl}}/api/access/workspace/{{workspaceId}}/list
+Authorization: {{token}}
+
+> {%
+    client.test("List workspace access returns 200 or 403", function () {
+        client.assert([200, 403].includes(response.status));
+        if (response.status === 200) {
+            client.assert(Array.isArray(response.body), "Expected array of access entries");
+        }
+    });
+%}
+
+### Grant Workspace Access (Admin required)
+POST {{baseUrl}}/api/access/workspace/{{workspaceId}}/grant
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "targetUserId": "{{currentUserId}}",
+  "accessLevel": "Read"
+}
+
+> {%
+    client.test("Grant workspace access returns 200 or 403", function () {
+        client.assert([200, 403].includes(response.status));
+        if (response.status === 200) {
+            client.assert(!!response.body.userId, "UserId should be present");
+            client.assert(!!response.body.accessLevel, "AccessLevel should be present");
+        }
+    });
+%}
+
+### Update Workspace Access (Admin required)
+PUT {{baseUrl}}/api/access/workspace/{{workspaceId}}/update
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "targetUserId": "{{currentUserId}}",
+  "accessLevel": "Write"
+}
+
+> {%
+    client.test("Update workspace access returns 200, 403, or 404", function () {
+        client.assert([200, 403, 404].includes(response.status));
+    });
+%}
+
+### Revoke Workspace Access (Admin required)
+DELETE {{baseUrl}}/api/access/workspace/{{workspaceId}}/revoke/{{currentUserId}}
+Authorization: {{token}}
+
+> {%
+    client.test("Revoke workspace access returns 204, 403, or 404", function () {
+        client.assert([204, 403, 404].includes(response.status));
+    });
+%}
+
+### Get My Organization Access
+GET {{baseUrl}}/api/access/organization/{{orgId}}
+Authorization: {{token}}
+
+> {%
+    client.test("Get org access returns 200 or 404", function () {
+        client.assert([200, 404].includes(response.status));
+        if (response.status === 200) {
+            client.assert(!!response.body.userId, "UserId should be present");
+            client.assert(!!response.body.orgId, "OrgId should be present");
+            client.assert(!!response.body.accessLevel, "AccessLevel should be present");
+        }
+    });
+%}
+
+### Get My Organization Access - unauthorized → 401
+GET {{baseUrl}}/api/access/organization/{{orgId}}
+
+> {%
+    client.test("Get org access requires auth", function () {
+        client.assert(response.status === 401);
+    });
+%}
+
+### List Organization Access (Admin required)
+GET {{baseUrl}}/api/access/organization/{{orgId}}/list
+Authorization: {{token}}
+
+> {%
+    client.test("List org access returns 200 or 403", function () {
+        client.assert([200, 403].includes(response.status));
+        if (response.status === 200) {
+            client.assert(Array.isArray(response.body), "Expected array of access entries");
+        }
+    });
+%}
+
+### Grant Organization Access (Admin required)
+POST {{baseUrl}}/api/access/organization/{{orgId}}/grant
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "targetUserId": "{{currentUserId}}",
+  "accessLevel": "Read"
+}
+
+> {%
+    client.test("Grant org access returns 200 or 403", function () {
+        client.assert([200, 403].includes(response.status));
+        if (response.status === 200) {
+            client.assert(!!response.body.userId, "UserId should be present");
+            client.assert(!!response.body.accessLevel, "AccessLevel should be present");
+        }
+    });
+%}
+
+### Revoke Organization Access (Admin required)
+DELETE {{baseUrl}}/api/access/organization/{{orgId}}/revoke/{{currentUserId}}
+Authorization: {{token}}
+
+> {%
+    client.test("Revoke org access returns 204, 403, or 404", function () {
+        client.assert([204, 403, 404].includes(response.status));
+    });
+%}
+
+
+### Get My Invitations
+GET {{baseUrl}}/api/access/invitations
+Authorization: {{token}}
+
+> {%
+    client.test("Get my invitations returns 200 and array", function () {
+        client.assert(response.status === 200);
+        client.assert(Array.isArray(response.body), "Expected array of invitations");
+    });
+%}
+
+### Get My Invitations - unauthorized → 401
+GET {{baseUrl}}/api/access/invitations
+
+> {%
+    client.test("Get my invitations requires auth", function () {
+        client.assert(response.status === 401);
+    });
+%}
+
+### Create Workspace Invitation (Admin required)
+POST {{baseUrl}}/api/access/workspace/{{workspaceId}}/invite
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "targetUserId": "{{currentUserId}}",
+  "accessLevel": "Read"
+}
+
+> {%
+    if (response.status === 200) {
+        client.global.set("invitationId_accept", response.body.id);
+    }
+    client.test("Create workspace invitation for accept returns 200 or 403", function () {
+        client.assert([200, 403].includes(response.status));
+        if (response.status === 200) {
+            client.assert(!!response.body.id, "Invitation id should be present");
+        }
+    });
+%}
+
+### Create another Workspace Invitation for Decline (Admin required)
+POST {{baseUrl}}/api/access/workspace/{{workspaceId}}/invite
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "targetUserId": "{{currentUserId}}",
+  "accessLevel": "Read"
+}
+
+> {%
+    if (response.status === 200) {
+        client.global.set("invitationId_decline", response.body.id);
+    }
+    client.test("Create workspace invitation for decline returns 200 or 403", function () {
+        client.assert([200, 403].includes(response.status));
+        if (response.status === 200) {
+            client.assert(!!response.body.id, "Invitation id should be present");
+        }
+    });
+%}
+
+### Accept Workspace Invitation
+POST {{baseUrl}}/api/access/invitations/{{invitationId_accept}}/accept
+Authorization: {{token_new}}
+
+> {%
+    client.test("Accept invitation returns 200 or 404", function () {
+        client.assert([200, 404].includes(response.status));
+    });
+%}
+
+### Decline Workspace Invitation
+POST {{baseUrl}}/api/access/invitations/{{invitationId_decline}}/decline
+Authorization: {{token_new}}
+
+> {%
+    client.test("Decline invitation returns 200 or 404", function () {
+        client.assert([200, 404].includes(response.status));
+    });
+%}
+
+### Accept Invitation - unauthorized → 401
+POST {{baseUrl}}/api/access/invitations/{{invitationId_decline}}/accept
+
+> {%
+    client.test("Accept invitation requires auth", function () {
+        client.assert(response.status === 401);
+    });
+%}
+
+### Set Organization Workspace Owner (Owner required on both)
+POST {{baseUrl}}/api/access/organization/{{orgId}}/workspace/{{workspaceId}}
+Authorization: {{token}}
+
+> {%
+    client.test("Set org workspace owner returns 200 or 403", function () {
+        client.assert([200, 403].includes(response.status));
+        if (response.status === 200) {
+            client.assert(response.body.success !== undefined, "Success field should be present");
+        }
+    });
+%}
+
+### Set Organization Workspace Owner - unauthorized → 401
+POST {{baseUrl}}/api/access/organization/{{orgId}}/workspace/{{workspaceId}}
+
+> {%
+    client.test("Set org workspace owner requires auth", function () {
+        client.assert(response.status === 401);
+    });
+%}
+
+### Remove Organization Workspace Owner (Owner required)
+DELETE {{baseUrl}}/api/access/organization/{{orgId}}/workspace/{{workspaceId}}
+Authorization: {{token}}
+
+> {%
+    client.test("Remove org workspace owner returns 204, 403, or 404", function () {
+        client.assert([204, 403, 404].includes(response.status));
+    });
+%}
+
+### Remove Organization Workspace Owner - unauthorized → 401
+DELETE {{baseUrl}}/api/access/organization/{{orgId}}/workspace/{{workspaceId}}
+
+> {%
+    client.test("Remove org workspace owner requires auth", function () {
+        client.assert(response.status === 401);
+    });
+%}
+
+### Delete Organization (Owner required)
+DELETE {{baseUrl}}/api/organization/{{orgId}}
+Authorization: {{token}}
+
+> {%
+    client.test("Delete organization returns 204 or 403", function () {
+        client.assert([204, 403].includes(response.status));
+    });
+%}
+
+### Delete Organization - unauthorized → 401
+DELETE {{baseUrl}}/api/organization/{{missingId}}
+
+> {%
+    client.test("Delete organization requires auth", function () {
+        client.assert(response.status === 401);
+    });
+%}
+
+
+
 ### Logout
 POST {{baseUrl}}/api/logout
 Authorization: {{token}}
@@ -599,4 +1041,3 @@ Authorization: invalid-token
         client.assert(response.status === 401);
     });
 %}
-

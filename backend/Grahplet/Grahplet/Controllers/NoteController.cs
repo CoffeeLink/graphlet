@@ -10,10 +10,12 @@ namespace Grahplet.Controllers;
 public class NoteController : ControllerBase
 {
     private readonly INoteRepository _noteRepository;
+    private readonly IAccessRepository _accessRepository;
 
-    public NoteController(INoteRepository noteRepository)
+    public NoteController(INoteRepository noteRepository, IAccessRepository accessRepository)
     {
         _noteRepository = noteRepository;
+        _accessRepository = accessRepository;
     }
 
     private IActionResult RequireAuth()
@@ -32,6 +34,14 @@ public class NoteController : ControllerBase
         if (authCheck != null) return authCheck;
 
         var userId = HttpContext.GetRequiredUserId();
+
+        // Check access
+        var hasAccess = await _accessRepository.HasWorkspaceAccessAsync(userId, workspaceId);
+        if (!hasAccess)
+        {
+            return StatusCode(403, "Access denied to workspace");
+        }
+
         var notes = await _noteRepository.GetNotesAsync(userId, workspaceId);
         return Ok(notes);
     }
@@ -48,6 +58,14 @@ public class NoteController : ControllerBase
         }
 
         var userId = HttpContext.GetRequiredUserId();
+
+        // Check Write access
+        var hasAccess = await _accessRepository.HasWorkspaceAccessAsync(userId, workspaceId, "Write");
+        if (!hasAccess)
+        {
+            return StatusCode(403, "Insufficient permissions - Write access required");
+        }
+
         var note = await _noteRepository.CreateNoteAsync(userId, workspaceId, request);
         return CreatedAtAction(nameof(GetNote), new { workspaceId, noteId = note.Id }, note);
     }
@@ -59,11 +77,19 @@ public class NoteController : ControllerBase
         if (authCheck != null) return authCheck;
 
         var userId = HttpContext.GetRequiredUserId();
+
+        // Check access
+        var hasAccess = await _accessRepository.HasWorkspaceAccessAsync(userId, workspaceId);
+        if (!hasAccess)
+        {
+            return StatusCode(403, "Access denied to workspace");
+        }
+
         var note = await _noteRepository.GetNoteAsync(userId, workspaceId, noteId);
         
         if (note == null)
         {
-            return NotFound("Note not found or access denied");
+            return NotFound("Note not found");
         }
 
         return Ok(note);
@@ -76,11 +102,19 @@ public class NoteController : ControllerBase
         if (authCheck != null) return authCheck;
 
         var userId = HttpContext.GetRequiredUserId();
+
+        // Check Write access
+        var hasAccess = await _accessRepository.HasWorkspaceAccessAsync(userId, workspaceId, "Write");
+        if (!hasAccess)
+        {
+            return StatusCode(403, "Insufficient permissions - Write access required");
+        }
+
         var note = await _noteRepository.UpdateNoteAsync(userId, workspaceId, noteId, request);
         
         if (note == null)
         {
-            return NotFound("Note not found or access denied");
+            return NotFound("Note not found");
         }
 
         return Ok(note);
@@ -93,11 +127,19 @@ public class NoteController : ControllerBase
         if (authCheck != null) return authCheck;
 
         var userId = HttpContext.GetRequiredUserId();
+
+        // Check Write access
+        var hasAccess = await _accessRepository.HasWorkspaceAccessAsync(userId, workspaceId, "Write");
+        if (!hasAccess)
+        {
+            return StatusCode(403, "Insufficient permissions - Write access required");
+        }
+
         var success = await _noteRepository.DeleteNoteAsync(userId, workspaceId, noteId);
         
         if (!success)
         {
-            return NotFound("Note not found or access denied");
+            return NotFound("Note not found");
         }
 
         return NoContent();
@@ -110,11 +152,19 @@ public class NoteController : ControllerBase
         if (authCheck != null) return authCheck;
 
         var userId = HttpContext.GetRequiredUserId();
+
+        // Check access
+        var hasAccess = await _accessRepository.HasWorkspaceAccessAsync(userId, workspaceId);
+        if (!hasAccess)
+        {
+            return StatusCode(403, "Access denied to workspace");
+        }
+
         var note = await _noteRepository.GetNoteAsync(userId, workspaceId, noteId);
         
         if (note == null)
         {
-            return NotFound("Note not found or access denied");
+            return NotFound("Note not found");
         }
 
         var tag = note.Tags.FirstOrDefault(t => t.Id == tagId);
@@ -134,11 +184,19 @@ public class NoteController : ControllerBase
         if (authCheck != null) return authCheck;
 
         var userId = HttpContext.GetRequiredUserId();
+
+        // Check Write access
+        var hasAccess = await _accessRepository.HasWorkspaceAccessAsync(userId, workspaceId, "Write");
+        if (!hasAccess)
+        {
+            return StatusCode(403, "Insufficient permissions - Write access required");
+        }
+
         var note = await _noteRepository.AttachTagToNoteAsync(userId, workspaceId, noteId, tagId);
         
         if (note == null)
         {
-            return NotFound("Note not found or access denied");
+            return NotFound("Note not found");
         }
 
         return Ok(note);
@@ -151,6 +209,14 @@ public class NoteController : ControllerBase
         if (authCheck != null) return authCheck;
 
         var userId = HttpContext.GetRequiredUserId();
+
+        // Check Write access
+        var hasAccess = await _accessRepository.HasWorkspaceAccessAsync(userId, workspaceId, "Write");
+        if (!hasAccess)
+        {
+            return StatusCode(403, "Insufficient permissions - Write access required");
+        }
+
         var success = await _noteRepository.DetachTagFromNoteAsync(userId, workspaceId, noteId, tagId);
         
         if (!success)
@@ -173,6 +239,14 @@ public class NoteController : ControllerBase
         }
 
         var userId = HttpContext.GetRequiredUserId();
+
+        // Check Write access
+        var hasAccess = await _accessRepository.HasWorkspaceAccessAsync(userId, workspaceId, "Write");
+        if (!hasAccess)
+        {
+            return StatusCode(403, "Insufficient permissions - Write access required");
+        }
+
         var relation = await _noteRepository.CreateRelationAsync(userId, workspaceId, noteId, request);
         return CreatedAtAction(nameof(GetRelation), new { workspaceId, noteId, relationId = relation.Id }, relation);
     }
@@ -184,11 +258,19 @@ public class NoteController : ControllerBase
         if (authCheck != null) return authCheck;
 
         var userId = HttpContext.GetRequiredUserId();
+
+        // Check access
+        var hasAccess = await _accessRepository.HasWorkspaceAccessAsync(userId, workspaceId);
+        if (!hasAccess)
+        {
+            return StatusCode(403, "Access denied to workspace");
+        }
+
         var relation = await _noteRepository.GetRelationAsync(userId, workspaceId, noteId, relationId);
         
         if (relation == null)
         {
-            return NotFound("Relation not found or access denied");
+            return NotFound("Relation not found");
         }
 
         return Ok(relation);
@@ -201,11 +283,19 @@ public class NoteController : ControllerBase
         if (authCheck != null) return authCheck;
 
         var userId = HttpContext.GetRequiredUserId();
+
+        // Check Write access
+        var hasAccess = await _accessRepository.HasWorkspaceAccessAsync(userId, workspaceId, "Write");
+        if (!hasAccess)
+        {
+            return StatusCode(403, "Insufficient permissions - Write access required");
+        }
+
         var relation = await _noteRepository.UpdateRelationAsync(userId, workspaceId, noteId, relationId, request);
         
         if (relation == null)
         {
-            return NotFound("Relation not found or access denied");
+            return NotFound("Relation not found");
         }
 
         return Ok(relation);
@@ -218,14 +308,21 @@ public class NoteController : ControllerBase
         if (authCheck != null) return authCheck;
 
         var userId = HttpContext.GetRequiredUserId();
+
+        // Check Write access
+        var hasAccess = await _accessRepository.HasWorkspaceAccessAsync(userId, workspaceId, "Write");
+        if (!hasAccess)
+        {
+            return StatusCode(403, "Insufficient permissions - Write access required");
+        }
+
         var success = await _noteRepository.DeleteRelationAsync(userId, workspaceId, noteId, relationId);
         
         if (!success)
         {
-            return NotFound("Relation not found or access denied");
+            return NotFound("Relation not found");
         }
 
         return NoContent();
     }
 }
-

@@ -50,3 +50,47 @@ public interface INoteRepository
     Task<bool> DeleteRelationAsync(Guid userId, Guid workspaceId, Guid noteId, Guid relationId);
 }
 
+
+public interface IAccessRepository
+{
+    // Workspace Access
+    Task<WorkspaceAccess?> GetWorkspaceAccessAsync(Guid userId, Guid workspaceId);
+    Task<List<WorkspaceAccess>> GetWorkspaceAccessListAsync(Guid workspaceId);
+    Task<List<Guid>> GetUserWorkspaceIdsAsync(Guid userId);
+    Task<WorkspaceAccess> GrantWorkspaceAccessAsync(Guid userId, Guid workspaceId, string accessLevel, Guid? invitedBy = null);
+    Task<bool> UpdateWorkspaceAccessAsync(Guid userId, Guid workspaceId, string accessLevel);
+    Task<bool> RevokeWorkspaceAccessAsync(Guid userId, Guid workspaceId);
+    Task<bool> HasWorkspaceAccessAsync(Guid userId, Guid workspaceId, string? minimumLevel = null);
+
+    // Organization Access
+    Task<OrgAccess?> GetOrgAccessAsync(Guid userId, Guid orgId);
+    Task<List<OrgAccess>> GetOrgAccessListAsync(Guid orgId);
+    Task<List<Guid>> GetUserOrgIdsAsync(Guid userId);
+    Task<OrgAccess> GrantOrgAccessAsync(Guid userId, Guid orgId, string accessLevel, Guid? invitedBy = null);
+    Task<bool> UpdateOrgAccessAsync(Guid userId, Guid orgId, string accessLevel);
+    Task<bool> RevokeOrgAccessAsync(Guid userId, Guid orgId);
+    Task<bool> HasOrgAccessAsync(Guid userId, Guid orgId, string? minimumLevel = null);
+
+    // Workspace Invitations
+    Task<WorkspaceInvitation?> GetWorkspaceInvitationAsync(Guid invitationId);
+    Task<List<WorkspaceInvitation>> GetUserWorkspaceInvitationsAsync(Guid userId);
+    Task<WorkspaceInvitation> CreateWorkspaceInvitationAsync(Guid workspaceId, Guid targetUserId, string accessLevel, Guid inviteMadeBy, DateTime? expires = null);
+    Task<bool> AcceptWorkspaceInvitationAsync(Guid invitationId, Guid userId);
+    Task<bool> DeclineWorkspaceInvitationAsync(Guid invitationId, Guid userId);
+
+    // Org-Workspace ownership
+    Task<bool> SetOrgWorkspaceOwnerAsync(Guid orgId, Guid workspaceId);
+    Task<bool> RemoveOrgWorkspaceOwnerAsync(Guid orgId, Guid workspaceId);
+    Task<Guid?> GetWorkspaceOrgIdAsync(Guid workspaceId);
+    Task<List<Guid>> GetOrgWorkspaceIdsAsync(Guid orgId);
+}
+
+public interface IOrganizationRepository
+{
+    Task<List<Organization>> GetUserOrganizationsAsync(Guid userId);
+    Task<Organization?> GetOrganizationAsync(Guid userId, Guid orgId);
+    Task<Organization> CreateOrganizationAsync(Guid userId, OrganizationCreate org);
+    Task<Organization?> UpdateOrganizationAsync(Guid userId, Guid orgId, OrganizationUpdate org);
+    Task<bool> DeleteOrganizationAsync(Guid userId, Guid orgId);
+}
+

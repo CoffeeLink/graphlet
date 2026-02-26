@@ -124,3 +124,55 @@ public class LoginResponse
     public string Token { get; set; } = string.Empty;
 }
 
+
+// Organization models
+public class Organization
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+}
+
+public class OrganizationCreate
+{
+    public string Name { get; set; } = string.Empty;
+}
+
+public class OrganizationUpdate
+{
+    public string? Name { get; set; }
+}
+
+// Access models
+public class WorkspaceAccess
+{
+    public Guid UserId { get; set; }
+    public Guid WorkspaceId { get; set; }
+    public string AccessLevel { get; set; } = string.Empty; // Read, Write, Admin, Owner
+    public Guid? InvitedBy { get; set; }
+}
+
+public class OrgAccess
+{
+    public Guid UserId { get; set; }
+    public Guid OrgId { get; set; }
+    public string AccessLevel { get; set; } = string.Empty; // Read, Write, Admin, Owner
+    public Guid? InvitedBy { get; set; }
+}
+
+public class WorkspaceInvitation
+{
+    public Guid Id { get; set; }
+    public Guid WorkspaceId { get; set; }
+    public Guid TargetUserId { get; set; }
+    public string AccessLevel { get; set; } = string.Empty;
+    public Guid InviteMadeBy { get; set; }
+    public DateTime Created { get; set; }
+    public DateTime Expires { get; set; }
+}
+
+public class WorkspaceInvitationCreate
+{
+    public Guid TargetUserId { get; set; }
+    public string AccessLevel { get; set; } = string.Empty;
+}
+

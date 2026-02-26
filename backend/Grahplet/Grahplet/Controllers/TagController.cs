@@ -10,10 +10,12 @@ namespace Grahplet.Controllers;
 public class TagController : ControllerBase
 {
     private readonly ITagRepository _tagRepository;
+    private readonly IAccessRepository _accessRepository;
 
-    public TagController(ITagRepository tagRepository)
+    public TagController(ITagRepository tagRepository, IAccessRepository accessRepository)
     {
         _tagRepository = tagRepository;
+        _accessRepository = accessRepository;
     }
 
     private IActionResult RequireAuth()
@@ -32,6 +34,14 @@ public class TagController : ControllerBase
         if (authCheck != null) return authCheck;
 
         var userId = HttpContext.GetRequiredUserId();
+
+        // Check access
+        var hasAccess = await _accessRepository.HasWorkspaceAccessAsync(userId, workspaceId);
+        if (!hasAccess)
+        {
+            return StatusCode(403, "Access denied to workspace");
+        }
+
         var tags = await _tagRepository.GetTagsAsync(userId, workspaceId);
         return Ok(tags);
     }
@@ -48,6 +58,14 @@ public class TagController : ControllerBase
         }
 
         var userId = HttpContext.GetRequiredUserId();
+
+        // Check Write access
+        var hasAccess = await _accessRepository.HasWorkspaceAccessAsync(userId, workspaceId, "Write");
+        if (!hasAccess)
+        {
+            return StatusCode(403, "Insufficient permissions - Write access required");
+        }
+
         var tag = await _tagRepository.CreateTagAsync(userId, workspaceId, request);
         return CreatedAtAction(nameof(GetTag), new { workspaceId, tagId = tag.Id }, tag);
     }
@@ -59,11 +77,19 @@ public class TagController : ControllerBase
         if (authCheck != null) return authCheck;
 
         var userId = HttpContext.GetRequiredUserId();
+
+        // Check access
+        var hasAccess = await _accessRepository.HasWorkspaceAccessAsync(userId, workspaceId);
+        if (!hasAccess)
+        {
+            return StatusCode(403, "Access denied to workspace");
+        }
+
         var tag = await _tagRepository.GetTagAsync(userId, workspaceId, tagId);
         
         if (tag == null)
         {
-            return NotFound("Tag not found or access denied");
+            return NotFound("Tag not found");
         }
 
         return Ok(tag);
@@ -76,11 +102,19 @@ public class TagController : ControllerBase
         if (authCheck != null) return authCheck;
 
         var userId = HttpContext.GetRequiredUserId();
+
+        // Check Write access
+        var hasAccess = await _accessRepository.HasWorkspaceAccessAsync(userId, workspaceId, "Write");
+        if (!hasAccess)
+        {
+            return StatusCode(403, "Insufficient permissions - Write access required");
+        }
+
         var tag = await _tagRepository.UpdateTagAsync(userId, workspaceId, tagId, request);
         
         if (tag == null)
         {
-            return NotFound("Tag not found or access denied");
+            return NotFound("Tag not found");
         }
 
         return Ok(tag);
@@ -93,11 +127,19 @@ public class TagController : ControllerBase
         if (authCheck != null) return authCheck;
 
         var userId = HttpContext.GetRequiredUserId();
+
+        // Check Write access
+        var hasAccess = await _accessRepository.HasWorkspaceAccessAsync(userId, workspaceId, "Write");
+        if (!hasAccess)
+        {
+            return StatusCode(403, "Insufficient permissions - Write access required");
+        }
+
         var success = await _tagRepository.DeleteTagAsync(userId, workspaceId, tagId);
         
         if (!success)
         {
-            return NotFound("Tag not found or access denied");
+            return NotFound("Tag not found");
         }
 
         return NoContent();

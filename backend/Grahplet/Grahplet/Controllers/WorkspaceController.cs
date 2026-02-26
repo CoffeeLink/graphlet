@@ -10,10 +10,12 @@ namespace Grahplet.Controllers;
 public class WorkspaceController : ControllerBase
 {
     private readonly IWorkspaceRepository _workspaceRepository;
+    private readonly IAccessRepository _accessRepository;
 
-    public WorkspaceController(IWorkspaceRepository workspaceRepository)
+    public WorkspaceController(IWorkspaceRepository workspaceRepository, IAccessRepository accessRepository)
     {
         _workspaceRepository = workspaceRepository;
+        _accessRepository = accessRepository;
     }
 
     private IActionResult RequireAuth()
@@ -59,11 +61,19 @@ public class WorkspaceController : ControllerBase
         if (authCheck != null) return authCheck;
 
         var userId = HttpContext.GetRequiredUserId();
+
+        // Check access
+        var hasAccess = await _accessRepository.HasWorkspaceAccessAsync(userId, id);
+        if (!hasAccess)
+        {
+            return NotFound("Workspace not found or access denied");
+        }
+
         var workspace = await _workspaceRepository.GetWorkspaceAsync(userId, id);
         
         if (workspace == null)
         {
-            return NotFound("Workspace not found or access denied");
+            return NotFound("Workspace not found");
         }
 
         return Ok(workspace);
@@ -76,11 +86,19 @@ public class WorkspaceController : ControllerBase
         if (authCheck != null) return authCheck;
 
         var userId = HttpContext.GetRequiredUserId();
+
+        // Check Admin access
+        var hasAccess = await _accessRepository.HasWorkspaceAccessAsync(userId, id, "Admin");
+        if (!hasAccess)
+        {
+            return StatusCode(403, "Insufficient permissions");
+        }
+
         var workspace = await _workspaceRepository.UpdateWorkspaceAsync(userId, id, request);
         
         if (workspace == null)
         {
-            return NotFound("Workspace not found or access denied");
+            return NotFound("Workspace not found");
         }
 
         return Ok(workspace);
@@ -93,11 +111,19 @@ public class WorkspaceController : ControllerBase
         if (authCheck != null) return authCheck;
 
         var userId = HttpContext.GetRequiredUserId();
+
+        // Check Owner access
+        var hasAccess = await _accessRepository.HasWorkspaceAccessAsync(userId, id, "Owner");
+        if (!hasAccess)
+        {
+            return StatusCode(403, "Insufficient permissions - Owner access required");
+        }
+
         var success = await _workspaceRepository.DeleteWorkspaceAsync(userId, id);
         
         if (!success)
         {
-            return NotFound("Workspace not found or access denied");
+            return NotFound("Workspace not found");
         }
 
         return NoContent();
