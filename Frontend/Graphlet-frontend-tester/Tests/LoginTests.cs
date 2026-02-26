@@ -15,7 +15,7 @@ namespace Graphlet_frontend_tester.Tests
         public void LoginWithValidCredentials()
         {
             loginPage.Login("demo@example.com", "demo");
-            Thread.Sleep(120);
+            Thread.Sleep(200);
             IWebElement message = driver.FindElement(By.Id("successful-login-message"));
             Assert.That(message.Displayed, Is.True);
             Thread.Sleep(1200);
