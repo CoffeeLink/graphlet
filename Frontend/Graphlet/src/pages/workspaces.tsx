@@ -52,7 +52,6 @@ export default function Workspaces() {
     const isInitialFullscreen = params.get('fullscreen') === '1';
     // These values are only read (the UI opens workspaces in a new tab). Keep them as constants.
     const openedWorkspaceId: string | null = initialWorkspaceId;
-    const isFullscreenMode: boolean = isInitialFullscreen;
 
     // Extracted loader so we can call it elsewhere
     async function loadWorkspaces() {
@@ -115,7 +114,7 @@ export default function Workspaces() {
     }
 
     // If the page was opened in fullscreen mode, render only the workspace component to occupy the whole tab
-    if (isFullscreenMode && openedWorkspaceId) {
+    if (isInitialFullscreen && openedWorkspaceId) {
         return (
             <div style={{height: '100vh', width: '100vw', margin: 0}}>
                 <WorkspaceComponent workspaceId={openedWorkspaceId} />
