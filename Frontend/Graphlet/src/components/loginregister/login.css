@@ -1,13 +1,13 @@
-.login-section
-{
-    border: 1px solid #ccc;
-    min-height: 100vh;
+.login-section {
+    border-radius: 25px;
     display: flex;
     justify-content: center;
     flex-direction: column;
     align-items: center;
     padding-left: 23px;
     padding-right: 23px;
+    margin: 0 auto;
+    gap: 10px;
 }
 
 .register-section{
@@ -24,4 +24,22 @@
 .register-section td, .login-section td{
     padding: 10px;
 
+}
+
+.loginForm{
+    border-radius: 25px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-left: 23px;
+    padding-right: 23px;
+    gap: 10px;
+}
+.container{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    width: 100%;
 }

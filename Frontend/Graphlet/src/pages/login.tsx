@@ -1,8 +1,11 @@
 import '../components/loginregister/login.css'
 import {useNavigate} from "react-router-dom";
-import { useState} from 'react';
+import {useState} from 'react';
 import SuccessfulLogin from '../components/loginregister/successfulLogin.tsx';
 import {ErrorComponent} from "../components/error/errorComponent.tsx";
+//ui
+import {Input} from "@heroui/input";
+import {Button} from "@heroui/button";
 
 export default function Login(){
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -11,83 +14,67 @@ export default function Login(){
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState(false);
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
 
 
     async function login(){
-        const emailInput = document.querySelector(".emailInput") as HTMLInputElement | null;
-        const passwordInput = document.querySelector(".passwordInput") as HTMLInputElement | null;
         setError(false);
-        if(!emailInput?.value || !passwordInput?.value ) {
+        if(!email || !password) {
             setError(true);
-            console.log(error);
             return;
         }
-        if(!emailRegex.test(emailInput.value)){
+        if(!emailRegex.test(email)){
             setError(true);
             console.log("Invalid email format");
             return;
         }
         const rawRes = await fetch("http://localhost:5188/api/login", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                email: emailInput.value,
-                password: passwordInput.value
+                email:email,
+                password:password
             })
         })
         const res = await rawRes.json();
 
-        console.log(res.status)
-        let token ="";
         if(rawRes.status === 200){
-             token= res.token;
-             localStorage.removeItem("token")
-             localStorage.setItem("token", token);
-        }else{
+            localStorage.removeItem("token");
+            localStorage.setItem("token", res.token);
+        } else {
             setError(true);
+            return;
         }
 
+        setLoading(true);
+        setSuccess(true);
 
-         setLoading(true);
-         // simulate success
-         setSuccess(true);
-
-         setTimeout(() => {
-             navigate("/workspaces");
-         }, 1000);
+        setTimeout(() => {
+            navigate("/workspaces");
+        }, 1000);
     }
 
     return(
+        <div className={"container"}>
         <section className="login-section fg">
-            <h1 >Login</h1>
+            <h1>Login</h1>
             {success && <SuccessfulLogin />}
-            <div className={"fg"}>
-                <table className="loginForm">
-                    <tbody>
-                        <tr>
-                            <td>Email: </td>
-                            <td><input type="email" className="emailInput" required /></td>
-                        </tr>
-                        <tr>
-                            <td>Password: </td>
-                            <td><input type="password" className="passwordInput" required onKeyDown={e=>{
-                                if(e.key === "Enter"){
-                                    login();
-                                }
-                            }}/></td>
-                        </tr>
-                        {error && <ErrorComponent error={"Wrong email or password!"}/>}
-                        <tr>
-                            <td colSpan={2}><button onClick={login} disabled={loading} id={"loginButton"}>{loading ? 'Working...' : 'Login'}</button></td>
-                        </tr>
-                        <tr>
-                            <td colSpan={2}><a href="/register" id={"registerLink"}>Don't have an account? Register here!</a></td>
-                        </tr>
-                    </tbody>
-                </table>
+            <div className={"loginForm"}>
+                <div className="flex w-full flex-wrap md:flex-nowrap gap-4">
+                    <Input label="Email" placeholder="Enter your email" type="email" required
+                        value={email} onValueChange={setEmail}/>
+                </div>
+                <div className="flex w-full flex-wrap md:flex-nowrap gap-4">
+                    <Input label="Password" placeholder="Enter your password" type="password" required
+                        value={password} onValueChange={setPassword}
+                        onKeyDown={e => { if (e.key === "Enter") login(); }}/>
+                </div>
+                {error && <ErrorComponent error={"Wrong email or password!"}/>}
+                <Button onPress={login} isDisabled={loading} id={"loginButton"}>{loading ? 'Working...' : 'Login'}</Button>
+                <a href="/register" id={"registerLink"}>Don't have an account? Register here!</a>
             </div>
         </section>
+        </div>
     )
 }

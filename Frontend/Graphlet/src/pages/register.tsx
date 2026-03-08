@@ -3,6 +3,8 @@ import {useNavigate} from "react-router-dom";
 import SuccessfulRegister from "../components/loginregister/successfulRegister.tsx";
 import '../components/loginregister/login.css'
 import {ErrorComponent} from "../components/error/errorComponent.tsx";
+import {Input} from "@heroui/input";
+import {Button} from "@heroui/button";
 
 export default function Register() {
     const [loading, setLoading] = useState(false);
@@ -11,37 +13,35 @@ export default function Register() {
     const [error, setError] = useState(false);
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     const [errormsg, setErrormsg] = useState("");
+    const [email, setEmail] = useState("");
+    const [username, setUsername] = useState("");
+    const [password, setPassword] = useState("");
 
     async function registerUser() {
-        const emailInput = document.querySelector(".emailInput") as HTMLInputElement | null;
-        const passwordInput = document.querySelector(".passwordInput") as HTMLInputElement | null;
-        const usernameInput = document.querySelector(".usernameInput") as HTMLInputElement | null;
-
-        setError(false)
-        if (!emailInput?.value || !passwordInput?.value || !usernameInput?.value) {
+        setError(false);
+        if (!email || !password || !username) {
             setError(true);
-            console.log(error);
+            setErrormsg("All fields are required.");
             return;
         }
-        if (!emailRegex.test(emailInput.value)) {
+        if (!emailRegex.test(email)) {
             setError(true);
-            console.log("Invalid email format");
+            setErrormsg("Invalid email format.");
             return;
         }
         try {
             const rawRes = await fetch("http://localhost:5188/api/user/register", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    name: usernameInput.value,
-                    email: emailInput.value,
-                    password: passwordInput.value
-                })
-            })
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name: username, email, password })
+            });
             const res = await rawRes.json();
-            console.log(res + "nice")
+
+            if (!rawRes.ok) {
+                setError(true);
+                setErrormsg(res ?? "Registration failed. Please try again.");
+                return;
+            }
 
             setLoading(true);
             setSuccess(true);
@@ -49,46 +49,36 @@ export default function Register() {
             setTimeout(() => {
                 navigate('/login');
             }, 1000);
-        }
-        catch {
+        } catch {
             setError(true);
             setErrormsg("Registration failed. Please try again.");
         }
     }
 
-
     return (
-        <section className="register-section fg">
-            <h1>Register</h1>
-            {success && <SuccessfulRegister/>}
-            <div>
-                <table className="registerForm">
-                    <tbody>
-                    <tr>
-                        <td>Email:</td>
-                        <td><input type="email" className="emailInput" required/></td>
-                    </tr>
-                    <tr>
-                        <td>Username:</td>
-                        <td><input type="text" className="usernameInput" required/></td>
-                    </tr>
-                    <tr>
-                        <td>Password:</td>
-                        <td><input type="password" className="passwordInput" required onKeyDown={e=>{if(e.key === "Enter"){registerUser()}}}/></td>
-                    </tr>
+        <div className={"container"}>
+            <section className="login-section fg">
+                <h1>Register</h1>
+                {success && <SuccessfulRegister/>}
+                <div className={"loginForm"}>
+                    <div className="flex w-full flex-wrap md:flex-nowrap gap-4">
+                        <Input label="Email" placeholder="Enter your email" type="email" required
+                               value={email} onValueChange={setEmail}/>
+                    </div>
+                    <div className="flex w-full flex-wrap md:flex-nowrap gap-4">
+                        <Input label="Username" placeholder="Enter your username" type="text" required
+                               value={username} onValueChange={setUsername}/>
+                    </div>
+                    <div className="flex w-full flex-wrap md:flex-nowrap gap-4">
+                        <Input label="Password" placeholder="Enter your password" type="password" required
+                               value={password} onValueChange={setPassword}
+                               onKeyDown={e => { if (e.key === "Enter") registerUser(); }}/>
+                    </div>
                     {error && <ErrorComponent error={errormsg}/>}
-                    <tr>
-                        <td colSpan={2}>
-                            <button onClick={registerUser} className={"registerButton"}
-                                    disabled={loading}>{loading ? 'Working...' : 'Register'}</button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td colSpan={2}><a href="/login" id={"loginLink"}>Already have an account? Login here!</a></td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
+                    <Button onPress={registerUser} isDisabled={loading}>{loading ? 'Working...' : 'Register'}</Button>
+                    <a href="/login" id={"loginLink"}>Already have an account? Login here!</a>
+                </div>
+            </section>
+        </div>
     );
 }
