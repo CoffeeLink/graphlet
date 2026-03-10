@@ -5,6 +5,7 @@ import WorkspacePreview from "../components/workspaces/workspacePreview.tsx";
 import CreatingNewWorkspace from "../components/workspaces/creatingNewWokspace.tsx";
 import { Workspace } from "../components/classes/workspace.tsx"
 import WorkspaceComponent from "../components/workspace/workspace.tsx";
+import {Input} from "@heroui/input";
 
 // Fetch workspaces from the API. Returns an array of Workspace objects (empty array on unexpected responses).
 async function getWorkspaces(): Promise<Workspace[]> {
@@ -128,7 +129,9 @@ export default function Workspaces() {
                 <header className={"workspaces-header"}>
                     <h2>My workspaces</h2>
                     <button type="button" id="create-new-button" onClick={handleCreateNewClick}>Create new</button>
-                    <p>Keresés <input type="text" id="search-workspaces-input" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Search for workspaces..."/></p>
+                    <div>
+                        <Input placeholder="Search for workspaces..." id="search-workspaces-input" value={searchTerm} onValueChange={setSearchTerm} />
+                    </div>
                     <button id="other-options-button" onClick={handleOtherOptionsClick}>...</button>
                     {showOtherOptions && <OtherOptions/>}
                 </header>
