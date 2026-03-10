@@ -128,7 +128,7 @@ export default function Workspaces() {
                 <header className={"workspaces-header"}>
                     <h2>My workspaces</h2>
                     <button type="button" id="create-new-button" onClick={handleCreateNewClick}>Create new</button>
-                    <p>Keresés <input type="text" id="search-workspaces-input" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Search workspaces..."/></p>
+                    <p>Keresés <input type="text" id="search-workspaces-input" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Search for workspaces..."/></p>
                     <button id="other-options-button" onClick={handleOtherOptionsClick}>...</button>
                     {showOtherOptions && <OtherOptions/>}
                 </header>

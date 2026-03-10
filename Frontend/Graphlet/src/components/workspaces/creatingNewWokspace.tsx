@@ -1,15 +1,11 @@
 import "./createNewWorkspace.css"
 import {useState} from "react";
-import {Tag} from "./tag.tsx";
 
 interface CreatingNewProps {
     onClose?: () => void;
 }
 
 export default function CreatingNewWokspace({ onClose }: CreatingNewProps) {
-
-    const tag = <Tag text="Aasd" color="blue" />;
-    console.log(tag);
 
     const [workspaceName, setWorkspaceName] = useState('')
     const [creating, setCreating] = useState(false);

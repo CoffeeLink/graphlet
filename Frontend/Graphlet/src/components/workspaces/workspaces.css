@@ -2,8 +2,6 @@
     display: flex;
     flex-direction: column;
     height: 100vh;
-    width: 90vw;
-    margin-left: 20px;
 }
 
 .workspaces-page main{
@@ -17,6 +15,10 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    width: 100%;
+    background-color: var(--foreground-color);
+    border-bottom: var(--border-color);
+    padding: 10px;
 }
 .workspaces-header input{
     border-radius: 5px;

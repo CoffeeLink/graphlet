@@ -19,29 +19,16 @@
   /*colors*/
 
 
-    --primary-background-color: #5b4d4a;
-
-    --foreground-color: #08080a;
-
-  /*.text{*/
-  /*  --text-color: #0e0d0b;*/
-  /*}*/
-
-    --button--color: #a1978d;
-
-    --textfield-color: #978e84;
-
-    --popup-background-color: #bdb2c0;
-
-    --alert-background-color: #ff5d5e;
-
-    --text-color: #ffffff;
-
-    --error-text-color :#ff5e5e;
-
-    --url-color: #5156b6;
-
-    --border-color: #1a2c95;
+    --primary-background-color: #13111a;
+    --foreground-color: #1f1b2e;
+    --button--color: #5b21b6;
+    --textfield-color: #2d2640;
+    --popup-background-color: #2a2440;
+    --alert-background-color: #dc2626;
+    --text-color: #e8e4f0;
+    --error-text-color: #f87171;
+    --url-color: #818cf8;
+    --border-color: #4c3d9e;
 }
 
 a {
