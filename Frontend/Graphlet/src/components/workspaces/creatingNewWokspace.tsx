@@ -1,5 +1,7 @@
 import "./createNewWorkspace.css"
 import {useState} from "react";
+import {Input} from "@heroui/input";
+import {Button} from "@heroui/button";
 
 interface CreatingNewProps {
     onClose?: () => void;
@@ -61,16 +63,15 @@ export default function CreatingNewWokspace({ onClose }: CreatingNewProps) {
                     <div className="header-title text">Create new workspace</div>
                     <button className="header-close close-button" aria-label="Close" onClick={handleClose}>X</button>
                 </div>
-                <table>
-                    <tbody>
-                    <tr >
-                        <td >Workspace name:</td>
-                        <td><input type="text" id={"nameInput"} value={workspaceName} onChange={(e) => setWorkspaceName(e.target.value)} /></td>
-                    </tr>
-                    </tbody>
-                </table>
+                <div className="flex w-full flex-wrap md:flex-nowrap gap-4">
+                    <Input label="Workspace name" placeholder="Enter workspace name"
+                           value={workspaceName} onValueChange={setWorkspaceName}/>
+                </div>
                 {error && <div className="create-error">{error}</div>}
-                <button onClick={async ()=>{ const ok = await handleCreateWorkspace(); if (ok) handleClose(); }} id={"create-new-workspace-button"} disabled={creating || workspaceName.trim() === ''}>{creating ? 'Creating...' : 'Create new Workspace'}</button>
+                <Button onPress={async () => { const ok = await handleCreateWorkspace(); if (ok) handleClose(); }}
+                        isDisabled={creating || workspaceName.trim() === ''}>
+                    {creating ? 'Creating...' : 'Create new Workspace'}
+                </Button>
             </div>
         </>
     );

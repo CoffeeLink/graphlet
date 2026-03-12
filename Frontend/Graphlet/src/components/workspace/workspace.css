@@ -6,15 +6,21 @@
 
 .workspace-toolbar{
   height: 60px;
-  background: #000;
+  background: var(--primary-background-color);
   display: flex;
   align-items: center;
-  padding: 12px;
-  position: relative; /* ensure absolute children (the floating toolbar) are positioned inside the toolbar */
+  position: relative;
+  padding: 8px 16px;
+  gap: 12px;
+  box-sizing: border-box;
 }
 .workspace-error{
-  margin-left: 12px;
-  color: crimson;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--error-text-color);
+  pointer-events: none;
+  white-space: nowrap;
 }
 
 .workspace-canvas{
@@ -26,11 +32,7 @@
 }
 
 .floating-toolbar{
-  position: absolute;
-  left: 16px;
-  right: 16px;
-  top: 16px;
-  z-index: 30;
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -38,8 +40,8 @@
 }
 .floating-toolbar .add-test-note-btn{
   width: 150px;
-  height: 60px;
-  background: #ddd;
+  height: 100%;
+  background: var(--button--color);
   border-radius: 6px;
   border: none;
   cursor: pointer;
