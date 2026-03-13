@@ -23,7 +23,6 @@
 
 .register-section td, .login-section td{
     padding: 10px;
-
 }
 
 .loginForm{
@@ -34,8 +33,10 @@
     justify-content: center;
     padding-left: 23px;
     padding-right: 23px;
+    padding-bottom: 15px;
     gap: 10px;
 }
+
 .container{
     display: flex;
     align-items: center;

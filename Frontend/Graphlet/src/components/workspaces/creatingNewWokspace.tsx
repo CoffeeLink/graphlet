@@ -65,10 +65,10 @@ export default function CreatingNewWokspace({ onClose }: CreatingNewProps) {
                 </div>
                 <div className="flex w-full flex-wrap md:flex-nowrap gap-4">
                     <Input label="Workspace name" placeholder="Enter workspace name"
-                           value={workspaceName} onValueChange={setWorkspaceName}/>
+                           value={workspaceName} onValueChange={setWorkspaceName} id={"nameInput"}/>
                 </div>
                 {error && <div className="create-error">{error}</div>}
-                <Button onPress={async () => { const ok = await handleCreateWorkspace(); if (ok) handleClose(); }}
+                <Button id={"create-new-workspace-button"} onPress={async () => { const ok = await handleCreateWorkspace(); if (ok) handleClose(); }}
                         isDisabled={creating || workspaceName.trim() === ''}>
                     {creating ? 'Creating...' : 'Create new Workspace'}
                 </Button>
