@@ -10,10 +10,10 @@ namespace Graphlet_frontend_tester.GraphletPages
     {
         public static readonly string URL = DefaultValues.base_url + "register";
 
-        IWebElement emailField => driver.FindElement(By.ClassName("emailInput"));
-        IWebElement passwordField => driver.FindElement(By.ClassName("passwordInput"));
-        IWebElement usernameInput => driver.FindElement(By.ClassName("usernameInput"));
-        IWebElement registerButton => driver.FindElement(By.ClassName("registerButton"));
+        IWebElement emailField => driver.FindElement(By.CssSelector(".emailInput input"));
+        IWebElement passwordField => driver.FindElement(By.CssSelector(".passwordInput input"));
+        IWebElement usernameInput => driver.FindElement(By.CssSelector(".usernameInput input"));
+        IWebElement registerButton => driver.FindElement(By.Id("registerButton"));
         IWebElement login_Link => driver.FindElement(By.Id("loginLink"));
 
 

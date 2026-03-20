@@ -46,15 +46,29 @@ namespace Graphlet_frontend_tester.GraphletPages
 
         public void ClearSearch()
         {
-            // Clearing the input programmatically doesn't always trigger the frontend
-            // listeners. Try to dispatch an input event via JS; fall back to sending
-            // a keystroke (space + backspace) which usually triggers change handlers.
-            
-                searchInput.Clear();
-                // send a keystroke to ensure frontend reacts to the change
-                searchInput.SendKeys(" ");
-                searchInput.SendKeys(Keys.Backspace);
-                Thread.Sleep(50);
+            IWebElement input = searchInput;
+            input.Click();
+            input.SendKeys(Keys.Control + "a");
+            input.SendKeys(Keys.Delete);
+
+            try
+            {
+                wait.Until(d => string.IsNullOrEmpty(searchInput.GetAttribute("value")));
+            }
+            catch (WebDriverTimeoutException)
+            {
+                // Fallback for controlled inputs: set value and dispatch events React listens to.
+                ((IJavaScriptExecutor)driver).ExecuteScript(
+                    "const el = arguments[0];" +
+                    "if (!el) return;" +
+                    "el.focus();" +
+                    "el.value = '';" +
+                    "el.dispatchEvent(new Event('input', { bubbles: true }));" +
+                    "el.dispatchEvent(new Event('change', { bubbles: true }));",
+                    input
+                );
+                wait.Until(d => string.IsNullOrEmpty(searchInput.GetAttribute("value")));
+            }
         }
 
         public void OpenOtherOptions()
@@ -129,7 +143,7 @@ namespace Graphlet_frontend_tester.GraphletPages
         public bool DeleteWorkspaceByName(string name)
         {
             // Clear search first to make sure the card is visible
-            try { searchInput.Clear(); } catch { /* ignore */ }
+            try { ClearSearch(); } catch { /* ignore */ }
             Thread.Sleep(150);
 
             var cards = driver.FindElements(By.CssSelector(".workspacePreview"));

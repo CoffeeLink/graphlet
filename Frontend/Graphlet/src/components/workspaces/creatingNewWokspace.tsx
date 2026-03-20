@@ -1,5 +1,5 @@
 import "./createNewWorkspace.css"
-import {useState} from "react";
+import {useState, useRef, useEffect} from "react";
 import {Input} from "@heroui/input";
 import {Button} from "@heroui/button";
 
@@ -8,6 +8,20 @@ interface CreatingNewProps {
 }
 
 export default function CreatingNewWokspace({ onClose }: CreatingNewProps) {
+
+    const ref = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (ref.current && !ref.current.contains(event.target as Node)) {
+                if (onClose) onClose();
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [onClose]);
 
     const [workspaceName, setWorkspaceName] = useState('')
     const [creating, setCreating] = useState(false);
@@ -58,7 +72,7 @@ export default function CreatingNewWokspace({ onClose }: CreatingNewProps) {
 
     return (
         <>
-            <div className={"creating-new-workspace fg"}>
+            <div className={"creating-new-workspace fg"} ref={ref}>
                 <div className="header-row">
                     <div className="header-title text">Create new workspace</div>
                     <button className="header-close close-button" aria-label="Close" onClick={handleClose}>X</button>

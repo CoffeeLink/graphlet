@@ -6,6 +6,7 @@ import CreatingNewWorkspace from "../components/workspaces/creatingNewWokspace.t
 import { Workspace } from "../components/classes/workspace.tsx"
 import WorkspaceComponent from "../components/workspace/workspace.tsx";
 import {Input} from "@heroui/input";
+import * as React from "react";
 
 // Fetch workspaces from the API. Returns an array of Workspace objects (empty array on unexpected responses).
 async function getWorkspaces(): Promise<Workspace[]> {
@@ -81,11 +82,13 @@ export default function Workspaces() {
         return () => { mounted = false; };
     }, []);
 
-    function handleOtherOptionsClick() { //opening options when button clicked
+    function handleOtherOptionsClick(e: React.MouseEvent) { //opening options when button clicked
+        e.stopPropagation();
         setShowOtherOptions(prev => !prev);
     }
 
-    function handleCreateNewClick() {
+    function handleCreateNewClick(e: React.MouseEvent) {
+        e.stopPropagation();
         setShowCreatingNew(prev => !prev);
     }
 
@@ -128,12 +131,12 @@ export default function Workspaces() {
             <div className="workspaces-page popup-bg">
                 <header className={"workspaces-header"}>
                     <h2>My workspaces</h2>
-                    <button type="button" id="create-new-button" onClick={handleCreateNewClick}>Create new</button>
+                    <button type="button" id="create-new-button" onClick={handleCreateNewClick} onMouseDown={(e) => e.stopPropagation()}>Create new</button>
                     <div>
                         <Input placeholder="Search for workspaces..." id="search-workspaces-input" value={searchTerm} onValueChange={setSearchTerm} />
                     </div>
-                    <button id="other-options-button" onClick={handleOtherOptionsClick}>...</button>
-                    {showOtherOptions && <OtherOptions/>}
+                    <button id="other-options-button" onClick={handleOtherOptionsClick} onMouseDown={(e) => e.stopPropagation()}>...</button>
+                    {showOtherOptions && <OtherOptions onClose={() => setShowOtherOptions(false)} />}
                 </header>
                 <main>
                     <div className="workspaces-container">

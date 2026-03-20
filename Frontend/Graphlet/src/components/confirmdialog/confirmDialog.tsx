@@ -44,7 +44,12 @@ export default function ConfirmDialog({
     }
 
     return(
-        <section className="confirm-dialog" onClick={(e) => { e.stopPropagation(); /* prevent clicks reaching parent workspace preview */ }}>
+        <section className="confirm-dialog" onClick={(e) => { 
+            e.stopPropagation(); 
+            if (e.target === e.currentTarget) {
+                onCancel();
+            }
+        }}>
             <div className="confirm-box">
                 <div className="header-row">
                     <div className="header-title">{title}</div>

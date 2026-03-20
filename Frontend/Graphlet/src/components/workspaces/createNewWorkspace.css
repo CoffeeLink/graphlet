@@ -36,3 +36,7 @@
 #nameInput{
     margin-left: 10px;
 }
+
+.create-error{
+    color: var(--error-text-color);
+}

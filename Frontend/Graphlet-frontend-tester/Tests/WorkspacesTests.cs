@@ -135,7 +135,7 @@ namespace Graphlet_frontend_tester.Tests
             // first ensure at least one workspace exists
             string name = TrackWorkspace("ClearSrch_" + DateTime.Now.ToString("HHmmssfff"));
             workspacesPage.CreateWorkspace(name);
-            Thread.Sleep(1500);
+            Thread.Sleep(100);
 
             int totalCount = workspacesPage.GetWorkspaceCards().Count;
 

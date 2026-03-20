@@ -29,7 +29,7 @@ namespace Graphlet_frontend_tester.Tests
         // ── Navigation ───────────────────────────────────────────────────────
 
         [Test]
-        public void SettingsPageShouldBeAccessible()
+            public void SettingsPageShouldBeAccessible()
         {
             Assert.That(driver.Url, Does.Contain("settings"));
         }
@@ -57,7 +57,7 @@ namespace Graphlet_frontend_tester.Tests
         public void ClickProfileNavShouldNavigateToProfile()
         {
             settingsPage.GoToProfile();
-            Thread.Sleep(100);
+            Thread.Sleep(200);
             Assert.That(driver.Url, Does.Contain("profile"));
         }
 

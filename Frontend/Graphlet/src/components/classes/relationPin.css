@@ -1,0 +1,98 @@
+.relation-pin-container {
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+}
+
+.relation-pin-img {
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    filter: drop-shadow(0 4px 3px rgba(0, 0, 0, 0.07)) drop-shadow(0 2px 2px rgba(0, 0, 0, 0.06)); /* drop-shadow-md */
+    transition: opacity 0.2s;
+}
+
+.relation-pin-img:hover {
+    opacity: 0.8;
+}
+
+.relation-pin-menu {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: 0.5rem; /* mt-2 */
+    width: 12rem; /* w-48 */
+    background-color: white;
+    border: 1px solid #e5e7eb; /* border-gray-200 */
+    border-radius: 0.25rem; /* rounded */
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* shadow-lg */
+    z-index: 50;
+    padding: 0.5rem; /* p-2 */
+    font-size: 0.875rem; /* text-sm */
+    color: black;
+}
+
+.relation-add-btn {
+    width: 100%;
+    text-align: left;
+    padding: 0.25rem 0.5rem; /* px-2 py-1 */
+    color: #2563eb; /* text-blue-600 */
+    border-radius: 0.25rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.relation-add-btn:hover {
+    background-color: #f3f4f6; /* hover:bg-gray-100 */
+}
+
+.relation-list {
+    max-height: 10rem; /* max-h-40 */
+    overflow-y: auto;
+}
+
+.relation-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+}
+
+.relation-item:hover {
+    background-color: #f9fafb; /* hover:bg-gray-50 */
+}
+
+.relation-item-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-right: 0.5rem;
+}
+
+.relation-delete-btn {
+    color: #ef4444; /* text-red-500 */
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.relation-delete-btn:hover {
+    color: #b91c1c; /* text-red-700 */
+}
+
+.relation-separator {
+    margin: 0.5rem 0;
+    border: none;
+    border-top: 1px solid #e5e7eb;
+}
+
+.relation-empty {
+    color: #9ca3af; /* text-gray-400 */
+    font-size: 0.75rem; /* text-xs */
+    padding: 0 0.5rem;
+    font-style: italic;
+}

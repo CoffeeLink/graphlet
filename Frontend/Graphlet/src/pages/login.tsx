@@ -63,11 +63,11 @@ export default function Login(){
             <div className={"loginForm"}>
                 <div className="flex w-full flex-wrap md:flex-nowrap gap-4">
                     <Input label="Email" placeholder="Enter your email" type="email" required
-                        value={email} onValueChange={setEmail}/>
+                        value={email} onValueChange={setEmail} className={"emailInput"}/>
                 </div>
                 <div className="flex w-full flex-wrap md:flex-nowrap gap-4">
                     <Input label="Password" placeholder="Enter your password" type="password" required
-                        value={password} onValueChange={setPassword}
+                        value={password} onValueChange={setPassword} className={"passwordInput"}
                         onKeyDown={e => { if (e.key === "Enter") login(); }}/>
                 </div>
                 {error && <ErrorComponent error={"Wrong email or password!"}/>}

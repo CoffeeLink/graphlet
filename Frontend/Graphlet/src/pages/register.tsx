@@ -63,19 +63,19 @@ export default function Register() {
                 <div className={"loginForm"}>
                     <div className="flex w-full flex-wrap md:flex-nowrap gap-4">
                         <Input label="Email" placeholder="Enter your email" type="email" required
-                               value={email} onValueChange={setEmail}/>
+                               value={email} onValueChange={setEmail} className={"emailInput"}/>
                     </div>
                     <div className="flex w-full flex-wrap md:flex-nowrap gap-4">
                         <Input label="Username" placeholder="Enter your username" type="text" required
-                               value={username} onValueChange={setUsername}/>
+                               value={username} onValueChange={setUsername} className={"usernameInput"}/>
                     </div>
                     <div className="flex w-full flex-wrap md:flex-nowrap gap-4">
                         <Input label="Password" placeholder="Enter your password" type="password" required
-                               value={password} onValueChange={setPassword}
+                               value={password} onValueChange={setPassword} className={"passwordInput"}
                                onKeyDown={e => { if (e.key === "Enter") registerUser(); }}/>
                     </div>
                     {error && <ErrorComponent error={errormsg}/>}
-                    <Button onPress={registerUser} isDisabled={loading}>{loading ? 'Working...' : 'Register'}</Button>
+                    <Button onPress={registerUser} isDisabled={loading} id={"registerButton"}>{loading ? 'Working...' : 'Register'}</Button>
                     <a href="/login" id={"loginLink"}>Already have an account? Login here!</a>
                 </div>
             </section>

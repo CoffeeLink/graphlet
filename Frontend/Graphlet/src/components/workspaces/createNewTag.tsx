@@ -1,4 +1,4 @@
-import { useState} from "react";
+import { useState, useRef, useEffect} from "react";
 import "./createNewTag.css"
 import "../error/errorComponent.tsx"
 import {ErrorComponent} from "../error/errorComponent.tsx";
@@ -7,7 +7,21 @@ interface CreatingNewProps {
     onClose?: () => void;
 }
 
-export function         CreateNewTag({onClose}: CreatingNewProps) {
+export function CreateNewTag({onClose}: CreatingNewProps) {
+    const ref = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (ref.current && !ref.current.contains(event.target as Node)) {
+                if (onClose) onClose();
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [onClose]);
+
     const [error, setError] = useState(false);
     const [color, setColor] = useState("gray");
     const [tagName, setTagName] = useState("tag");
@@ -46,7 +60,7 @@ export function         CreateNewTag({onClose}: CreatingNewProps) {
 
 
     return (
-        <div className={"create-new-tag"}>
+        <div className={"create-new-tag"} ref={ref}>
             <div className="header-row">
                 <h3 className={"header-title"}>Create new tag</h3>
                 <button className="header-close close-button" onClick={handleClose}>X</button>
