@@ -2,7 +2,8 @@ import Login from '../../pages/login.tsx';
 import Register from '../../pages/register.tsx';
 import Settings from '../../pages/settings.tsx';
 import Workspaces from "../../pages/workspaces.tsx";
-import SettingsRightAppearance from "../settings/rightsidePages/settingsRightAppearance.tsx";
+import SettingsRightOrganization from "../settings/rightsidePages/settingsRightOrganization.tsx";
+import SettingsRightInvites from "../settings/rightsidePages/settingsRightInvites.tsx";
 import SettingsRightProfileSettings from "../settings/rightsidePages/settingsRightProfileSettings.tsx";
 import SettingsRightSharedItems from "../settings/rightsidePages/settingsRightSharedItems.tsx";
 import SettingsRightSubscription from "../settings/rightsidePages/settingsRightSubscription.tsx";
@@ -32,11 +33,15 @@ export const ROUTING = [
         children: [
             {
                 index: true,
-                element: <Navigate to="/settings/appearance" replace/>
+                element: <Navigate to="/settings/organization" replace/>
             },
             {
-                path: "appearance",
-                element: <SettingsRightAppearance/>
+                path: "organization",
+                element: <SettingsRightOrganization/>
+            },
+            {
+                path: "invites",
+                element: <SettingsRightInvites/>
             },
             {
                 path: "profile",

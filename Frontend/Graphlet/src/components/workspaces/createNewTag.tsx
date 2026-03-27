@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect} from "react";
+import {useState, useRef, useEffect} from "react";
 import "./createNewTag.css"
 import "../error/errorComponent.tsx"
 import {ErrorComponent} from "../error/errorComponent.tsx";
@@ -16,6 +16,7 @@ export function CreateNewTag({onClose}: CreatingNewProps) {
                 if (onClose) onClose();
             }
         }
+
         document.addEventListener("mousedown", handleClickOutside);
         return () => {
             document.removeEventListener("mousedown", handleClickOutside);
@@ -26,7 +27,7 @@ export function CreateNewTag({onClose}: CreatingNewProps) {
     const [color, setColor] = useState("gray");
     const [tagName, setTagName] = useState("tag");
 
-    function handleClose(){
+    function handleClose() {
         if (onClose) onClose();
     }
 
@@ -46,9 +47,8 @@ export function CreateNewTag({onClose}: CreatingNewProps) {
             if (rawRes.status === 201) {
                 handleClose();
                 //gettags in the parent component
-            }
-            else {
-                console.error( "Failed to create tag, status code:", rawRes.status);
+            } else {
+                console.error("Failed to create tag, status code:", rawRes.status);
             }
             console.log("Creating tag:", {tagName, color});
 
@@ -69,18 +69,23 @@ export function CreateNewTag({onClose}: CreatingNewProps) {
                 <tbody>
                 <tr>
                     <td>Tag name:</td>
-                    <td><input type="text" id={"tagNameInput"} value={tagName} onChange={e => setTagName(e.target.value)}/></td>
+                    <td><input type="text" id={"tagNameInput"} value={tagName}
+                               onChange={e => setTagName(e.target.value)}/></td>
                 </tr>
                 <tr>
                     <td>Tag color:</td>
-                    <td><input type="color"  value={color} onChange={e => setColor(e.target.value)}/></td>
+                    <td><input type="color" value={color} onChange={e => setColor(e.target.value)}/></td>
                 </tr>
                 <tr>
                     <td colSpan={2}>{error && <ErrorComponent error={"An error occurred during creating tag."}/>}</td>
                 </tr>
                 <tr>
                     <td colSpan={2}>
-                        <button onClick={()=>{handleCreateNewTag(); handleClose()}}>Create Tag</button>
+                        <button onClick={() => {
+                            handleCreateNewTag();
+                            handleClose()
+                        }}>Create Tag
+                        </button>
                     </td>
                 </tr>
                 </tbody>
