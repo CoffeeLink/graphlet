@@ -68,7 +68,7 @@ namespace Graphlet_frontend_tester.Tests
         }
 
         [Test]
-        public void CreateNewWorkspaceShouldAppearInList()
+            public void CreateNewWorkspaceShouldAppearInList()
         {
             string name = TrackWorkspace("TestWS_" + DateTime.Now.ToString("yyyyMMddHHmmssfff"));
             int countBefore = workspacesPage.GetWorkspaceCards().Count;
