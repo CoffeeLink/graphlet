@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import './settingsRightComponents.css';
 
 interface Organization {
@@ -14,18 +14,70 @@ interface Workspace {
 export default function SettingsRightOrganization() {
     const [organizations, setOrganizations] = useState<Organization[]>([]);
     const [userWorkspaces, setUserWorkspaces] = useState<Workspace[]>([]);
-    const [orgWorkspaces, setOrgWorkspaces] = useState<Record<string, string[]>>({}); // OrgId -> WorkspaceIds
+    const [orgWorkspaces, setOrgWorkspaces] = useState<Record<string, string[]>>({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [createName, setCreateName] = useState('');
-    const [selectedWorkspace, setSelectedWorkspace] = useState<Record<string, string>>({}); // OrgId -> Selected WorkspaceId for adding
+    const [selectedWorkspace, setSelectedWorkspace] = useState<Record<string, string>>({});
+    const [inviteTarget, setInviteTarget] = useState<Record<string, string>>({});
+    const [inviteAccessLevel, setInviteAccessLevel] = useState<Record<string, string>>({});
 
-    useEffect(() => {
-        fetchData();
+    const fetchOrgWorkspaces = useCallback(async (orgId: string) => {
+        try {
+            const response = await fetch(`http://localhost:5188/api/organization/${orgId}/workspaces`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+
+            if (!response.ok) {
+                return;
+            }
+
+            const workspaceIds = await response.json();
+            setOrgWorkspaces(prev => ({ ...prev, [orgId]: workspaceIds }));
+        } catch (err) {
+            console.error(`Failed to fetch workspaces for org ${orgId}`, err);
+        }
     }, []);
 
-    const fetchData = async () => {
+    const fetchOrganizations = useCallback(async () => {
+        const response = await fetch('http://localhost:5188/api/organization', {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+
+        if (!response.ok) {
+            setError('Failed to fetch organizations');
+            return;
+        }
+
+        const data = await response.json();
+        setOrganizations(data);
+        await Promise.all(data.map((org: Organization) => fetchOrgWorkspaces(org.id)));
+    }, [fetchOrgWorkspaces]);
+
+    const fetchUserWorkspaces = useCallback(async () => {
+        const response = await fetch('http://localhost:5188/api/workspace', {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+
+        if (!response.ok) {
+            setError('Failed to fetch workspaces');
+            return;
+        }
+
+        const data = await response.json();
+        setUserWorkspaces(data);
+    }, []);
+
+    const fetchData = useCallback(async () => {
         setLoading(true);
+        setError(null);
+
         try {
             await Promise.all([fetchOrganizations(), fetchUserWorkspaces()]);
         } catch (err) {
@@ -33,123 +85,131 @@ export default function SettingsRightOrganization() {
         } finally {
             setLoading(false);
         }
+    }, [fetchOrganizations, fetchUserWorkspaces]);
+
+    useEffect(() => {
+        void fetchData();
+    }, [fetchData]);
+
+    const handleCreate = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        try {
+            const response = await fetch('http://localhost:5188/api/organization', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({ name: createName })
+            });
+
+            if (!response.ok) {
+                setError('Failed to create organization');
+                return;
+            }
+
+            setCreateName('');
+            await fetchOrganizations();
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Unknown error');
+        }
     };
 
-const fetchOrganizations = async () => {
-    const response = await fetch('http://localhost:5188/api/organization', {
-        headers: {
-            'Authorization': `Bearer ${localStorage.getItem("token")}`
+    const handleDelete = async (id: string) => {
+        if (!confirm('Are you sure you want to delete this organization?')) return;
+
+        try {
+            const response = await fetch(`http://localhost:5188/api/organization/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+
+            if (!response.ok) {
+                setError('Failed to delete organization');
+                return;
+            }
+
+            setOrganizations(prev => prev.filter(o => o.id !== id));
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Unknown error');
         }
-    });
+    };
 
-    if (!response.ok) throw new Error('Failed to fetch organizations');
-    const data = await response.json();
-    setOrganizations(data);
-    
-    // Fetch workspaces for each organization
-    data.forEach((org: Organization) => fetchOrgWorkspaces(org.id));
-};
+    const handleAddWorkspace = async (orgId: string) => {
+        const workspaceId = selectedWorkspace[orgId];
+        if (!workspaceId) return;
 
-const fetchUserWorkspaces = async () => {
-    const response = await fetch('http://localhost:5188/api/workspace', {
-        headers: {
-            'Authorization': `Bearer ${localStorage.getItem("token")}`
+        try {
+            const response = await fetch(`http://localhost:5188/api/access/organization/${orgId}/workspace/${workspaceId}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+
+            if (!response.ok) {
+                setError('Failed to add workspace to organization');
+                return;
+            }
+
+            await fetchOrgWorkspaces(orgId);
+            setSelectedWorkspace(prev => ({ ...prev, [orgId]: '' }));
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Unknown error');
         }
-    });
-    if (!response.ok) throw new Error('Failed to fetch workspaces');
-    const data = await response.json();
-    setUserWorkspaces(data);
-};
+    };
 
-const fetchOrgWorkspaces = async (orgId: string) => {
-    try {
-        const response = await fetch(`http://localhost:5188/api/organization/${orgId}/workspaces`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem("token")}`
+    const handleInviteUser = async (orgId: string) => {
+        const targetUserId = inviteTarget[orgId];
+        const accessLevel = inviteAccessLevel[orgId] || 'Write';
+        if (!targetUserId) return;
+
+        try {
+            const response = await fetch(`http://localhost:5188/api/access/organization/${orgId}/invite`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({ targetUserId, accessLevel })
+            });
+
+            if (!response.ok) {
+                setError('Failed to invite user to organization');
+                return;
             }
-        });
-        if (response.ok) {
-            const workspaceIds = await response.json();
-            setOrgWorkspaces(prev => ({ ...prev, [orgId]: workspaceIds }));
+
+            setInviteTarget(prev => ({ ...prev, [orgId]: '' }));
+            setInviteAccessLevel(prev => ({ ...prev, [orgId]: 'Write' }));
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Unknown error');
         }
-    } catch (err) {
-        console.error(`Failed to fetch workspaces for org ${orgId}`, err);
-    }
-};
+    };
 
-const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-        const response = await fetch('http://localhost:5188/api/organization', {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem("token")}`
-            },
-            body: JSON.stringify({ name: createName })
-        });
-        if (!response.ok) throw new Error('Failed to create organization');
-        setCreateName('');
-        await fetchOrganizations();
-    } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error');
-    }
-};
+    const handleRemoveWorkspace = async (orgId: string, workspaceId: string) => {
+        if (!confirm('Remove workspace from organization?')) return;
 
-const handleDelete = async (id: string) => {
-    if(!confirm("Are you sure you want to delete this organization?")) return;
-    try {
-        const response = await fetch(`http://localhost:5188/api/organization/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem("token")}`
+        try {
+            const response = await fetch(`http://localhost:5188/api/access/organization/${orgId}/workspace/${workspaceId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+
+            if (!response.ok) {
+                setError('Failed to remove workspace from organization');
+                return;
             }
-        });
-        if (!response.ok) throw new Error('Failed to delete organization');
-        // Remove from state immediately for better UX
-        setOrganizations(prev => prev.filter(o => o.id !== id));
-    } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error');
-    }
-};
 
-const handleAddWorkspace = async (orgId: string) => {
-    const workspaceId = selectedWorkspace[orgId];
-    if (!workspaceId) return;
-
-    try {
-        const response = await fetch(`http://localhost:5188/api/access/organization/${orgId}/workspace/${workspaceId}`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem("token")}`
-            }
-        });
-        if (!response.ok) throw new Error('Failed to add workspace to organization');
-        
-        await fetchOrgWorkspaces(orgId);
-        // reset selection
-        setSelectedWorkspace(prev => ({ ...prev, [orgId]: "" }));
-    } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error');
-    }
-};
-
-const handleRemoveWorkspace = async (orgId: string, workspaceId: string) => {
-    if(!confirm("Remove workspace from organization?")) return;
-    try {
-        const response = await fetch(`http://localhost:5188/api/access/organization/${orgId}/workspace/${workspaceId}`, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem("token")}`
-            }
-        });
-        if (!response.ok) throw new Error('Failed to remove workspace from organization');
-        
-        await fetchOrgWorkspaces(orgId);
-    } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error');
-    }
-};
+            await fetchOrgWorkspaces(orgId);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Unknown error');
+        }
+    };
 
     const getWorkspaceName = (id: string) => {
         const ws = userWorkspaces.find(w => w.id === id);
@@ -162,12 +222,12 @@ const handleRemoveWorkspace = async (orgId: string, workspaceId: string) => {
         <section className="settings-right-component">
             <h1>Organization Settings</h1>
             {error && <div className="error">{error}</div>}
-            
+
             <div className="section">
                 <h3>Create Organization</h3>
                 <form onSubmit={handleCreate}>
-                    <input 
-                        type="text" 
+                    <input
+                        type="text"
                         value={createName}
                         onChange={(e) => setCreateName(e.target.value)}
                         placeholder="Organization Name"
@@ -187,7 +247,7 @@ const handleRemoveWorkspace = async (orgId: string, workspaceId: string) => {
                                     <span className="org-name">{org.name}</span>
                                     <button onClick={() => handleDelete(org.id)} className="delete-btn">Delete Organization</button>
                                 </div>
-                                
+
                                 <div className="org-workspaces">
                                     <h4>Workspaces:</h4>
                                     <ul className="sub-list">
@@ -200,21 +260,39 @@ const handleRemoveWorkspace = async (orgId: string, workspaceId: string) => {
                                     </ul>
 
                                     <div className="add-workspace">
-                                        <select 
-                                            value={selectedWorkspace[org.id] || ""}
-                                            onChange={(e) => setSelectedWorkspace({...selectedWorkspace, [org.id]: e.target.value})}
+                                        <select
+                                            value={selectedWorkspace[org.id] || ''}
+                                            onChange={(e) => setSelectedWorkspace({ ...selectedWorkspace, [org.id]: e.target.value })}
                                         >
-                                            <option value="">Select workspace to add...</option>
+                                            <option className={"option-item"} value="">Select workspace to add...</option>
                                             {userWorkspaces
                                                 .filter(ws => !(orgWorkspaces[org.id] || []).includes(ws.id))
                                                 .map(ws => (
-                                                    <option key={ws.id} value={ws.id}>
+                                                    <option className={"option-item"} key={ws.id} value={ws.id}>
                                                         {ws.name}
                                                     </option>
-                                                ))
-                                            }
+                                                ))}
                                         </select>
                                         <button onClick={() => handleAddWorkspace(org.id)} disabled={!selectedWorkspace[org.id]}>Add Workspace</button>
+                                    </div>
+
+                                    <div className="add-workspace">
+                                        <input
+                                            type="text"
+                                            value={inviteTarget[org.id] || ''}
+                                            onChange={(e) => setInviteTarget({ ...inviteTarget, [org.id]: e.target.value })}
+                                            placeholder="Target user ID"
+                                        />
+                                        <select
+                                            value={inviteAccessLevel[org.id] || 'Write'}
+                                            onChange={(e) => setInviteAccessLevel({ ...inviteAccessLevel, [org.id]: e.target.value })}
+                                        >
+                                            <option className={"option-item"} value="Read">Read</option>
+                                            <option className={"option-item"} value="Write">Write</option>
+                                            <option className={"option-item"} value="Admin">Admin</option>
+                                            <option className={"option-item"} value="Owner">Owner</option>
+                                        </select>
+                                        <button onClick={() => handleInviteUser(org.id)} disabled={!inviteTarget[org.id]}>Invite User</button>
                                     </div>
                                 </div>
                             </li>
@@ -225,7 +303,3 @@ const handleRemoveWorkspace = async (orgId: string, workspaceId: string) => {
         </section>
     );
 }
-
-
-
-

@@ -134,3 +134,66 @@
     border: 1px solid var(--border-color);
     flex-grow: 1;
 }
+
+.option-item {
+    background-color: var(--foreground-color);
+}
+
+/* Profile page: update form layout */
+.settings-right-component .modify-user {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.settings-right-component .modify-user input {
+    margin-right: 0; /* avoid double spacing with flex gap */
+}
+
+/* Profile page: edit form table */
+.settings-right-component .edit-table {
+    width: 100%;
+    max-width: 600px; /* keep the editor from stretching too wide */
+    margin: 0 auto; /* center the table within the page */
+    border-collapse: collapse;
+}
+
+.settings-right-component .edit-table th,
+.settings-right-component .edit-table td {
+    padding: 8px 6px;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+}
+
+.settings-right-component .edit-table th {
+    text-align: left;
+    font-weight: 600;
+    width: 200px;
+}
+
+.settings-right-component .edit-table td input {
+    width: 100%;
+    max-width: 520px; /* keep inputs reasonable on large screens */
+    box-sizing: border-box;
+    margin-right: 0; /* override generic input spacing */
+}
+
+.settings-right-component .edit-table-actions {
+    display: flex;
+    gap: 16px; /* more space between Save and Refresh */
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+/* Profile page: public user lookup centered */
+.settings-right-component .public-user-search {
+    max-width: 520px;
+    margin: 0 auto;
+}
+
+.settings-right-component .public-user-search .add-workspace input {
+    width: 520px;
+    max-width: 100%;
+    margin-right: 0; /* avoid double spacing with flex gap */
+}

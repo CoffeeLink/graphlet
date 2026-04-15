@@ -228,6 +228,42 @@ public class AccessController : ControllerBase
         return NoContent();
     }
 
+    [HttpPost("organization/{orgId}/invite")]
+    public async Task<IActionResult> CreateOrganizationInvitation(Guid orgId, [FromBody] GrantAccessRequest request)
+    {
+        var authCheck = RequireAuth();
+        if (authCheck != null) return authCheck;
+
+        var userId = HttpContext.GetRequiredUserId();
+
+        // Check if user has admin access to invite
+        var hasAccess = await _accessRepository.HasOrgAccessAsync(userId, orgId, "Admin");
+        if (!hasAccess)
+        {
+            return StatusCode(403, "Insufficient permissions");
+        }
+
+        if (request.TargetUserId == userId)
+        {
+            return BadRequest("You cannot invite yourself");
+        }
+
+        var targetAlreadyHasAccess = await _accessRepository.HasOrgAccessAsync(request.TargetUserId, orgId);
+        if (targetAlreadyHasAccess)
+        {
+            return Conflict("User already has access to this organization");
+        }
+
+        var invitation = await _accessRepository.CreateOrganizationInvitationAsync(
+            orgId,
+            request.TargetUserId,
+            request.AccessLevel,
+            userId
+        );
+
+        return Ok(invitation);
+    }
+
     // Workspace Invitations
     [HttpGet("invitations")]
     public async Task<IActionResult> GetMyInvitations()
@@ -237,6 +273,18 @@ public class AccessController : ControllerBase
 
         var userId = HttpContext.GetRequiredUserId();
         var invitations = await _accessRepository.GetUserWorkspaceInvitationsAsync(userId);
+
+        return Ok(invitations);
+    }
+
+    [HttpGet("organization-invitations")]
+    public async Task<IActionResult> GetMyOrganizationInvitations()
+    {
+        var authCheck = RequireAuth();
+        if (authCheck != null) return authCheck;
+
+        var userId = HttpContext.GetRequiredUserId();
+        var invitations = await _accessRepository.GetUserOrganizationInvitationsAsync(userId);
 
         return Ok(invitations);
     }
@@ -291,6 +339,40 @@ public class AccessController : ControllerBase
 
         var userId = HttpContext.GetRequiredUserId();
         var success = await _accessRepository.DeclineWorkspaceInvitationAsync(invitationId, userId);
+
+        if (!success)
+        {
+            return NotFound("Invitation not found");
+        }
+
+        return Ok();
+    }
+
+    [HttpPost("organization-invitations/{invitationId}/accept")]
+    public async Task<IActionResult> AcceptOrganizationInvitation(Guid invitationId)
+    {
+        var authCheck = RequireAuth();
+        if (authCheck != null) return authCheck;
+
+        var userId = HttpContext.GetRequiredUserId();
+        var success = await _accessRepository.AcceptOrganizationInvitationAsync(invitationId, userId);
+
+        if (!success)
+        {
+            return NotFound("Invitation not found or expired");
+        }
+
+        return Ok();
+    }
+
+    [HttpPost("organization-invitations/{invitationId}/decline")]
+    public async Task<IActionResult> DeclineOrganizationInvitation(Guid invitationId)
+    {
+        var authCheck = RequireAuth();
+        if (authCheck != null) return authCheck;
+
+        var userId = HttpContext.GetRequiredUserId();
+        var success = await _accessRepository.DeclineOrganizationInvitationAsync(invitationId, userId);
 
         if (!success)
         {

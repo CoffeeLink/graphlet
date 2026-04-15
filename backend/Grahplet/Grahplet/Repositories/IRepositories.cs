@@ -78,6 +78,13 @@ public interface IAccessRepository
     Task<bool> AcceptWorkspaceInvitationAsync(Guid invitationId, Guid userId);
     Task<bool> DeclineWorkspaceInvitationAsync(Guid invitationId, Guid userId);
 
+    // Organization Invitations
+    Task<OrganizationInvitation?> GetOrganizationInvitationAsync(Guid invitationId);
+    Task<List<OrganizationInvitation>> GetUserOrganizationInvitationsAsync(Guid userId);
+    Task<OrganizationInvitation> CreateOrganizationInvitationAsync(Guid orgId, Guid targetUserId, string accessLevel, Guid inviteMadeBy, DateTime? expires = null);
+    Task<bool> AcceptOrganizationInvitationAsync(Guid invitationId, Guid userId);
+    Task<bool> DeclineOrganizationInvitationAsync(Guid invitationId, Guid userId);
+
     // Org-Workspace ownership
     Task<bool> SetOrgWorkspaceOwnerAsync(Guid orgId, Guid workspaceId);
     Task<bool> RemoveOrgWorkspaceOwnerAsync(Guid orgId, Guid workspaceId);

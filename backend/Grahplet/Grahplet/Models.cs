@@ -176,3 +176,21 @@ public class WorkspaceInvitationCreate
     public string AccessLevel { get; set; } = string.Empty;
 }
 
+public class OrganizationInvitation
+{
+    public Guid Id { get; set; }
+    public Guid OrgId { get; set; }
+    public string OrganizationName { get; set; } = string.Empty;
+    public Guid TargetUserId { get; set; }
+    public string AccessLevel { get; set; } = string.Empty;
+    public Guid InviteMadeBy { get; set; }
+    public DateTime Created { get; set; }
+    public DateTime Expires { get; set; }
+}
+
+public class OrganizationInvitationCreate
+{
+    public Guid TargetUserId { get; set; }
+    public string AccessLevel { get; set; } = string.Empty;
+}
+

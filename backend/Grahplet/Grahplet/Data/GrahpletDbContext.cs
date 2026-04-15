@@ -15,6 +15,7 @@ public class GrahpletDbContext(DbContextOptions<GrahpletDbContext> options) : Db
     // Access control
     public DbSet<DbUserWorkspaceAccess> UserWorkspaceAccess => Set<DbUserWorkspaceAccess>();
     public DbSet<DbWorkspaceInvitation> WorkspaceInvitations => Set<DbWorkspaceInvitation>();
+    public DbSet<DbOrganizationInvitation> OrganizationInvitations => Set<DbOrganizationInvitation>();
 
     // Organizations
     public DbSet<DbOrganization> Organizations => Set<DbOrganization>();
@@ -50,6 +51,9 @@ public class GrahpletDbContext(DbContextOptions<GrahpletDbContext> options) : Db
         modelBuilder.Entity<DbOrgWorkspaceOwner>()
             .HasKey(o => new { o.OrgId, o.WorkspaceId });
 
+        modelBuilder.Entity<DbOrganizationInvitation>()
+            .HasKey(i => i.Id);
+
         // Indexes for access queries
         modelBuilder.Entity<DbUserWorkspaceAccess>()
             .HasIndex(a => a.UserId);
@@ -62,5 +66,11 @@ public class GrahpletDbContext(DbContextOptions<GrahpletDbContext> options) : Db
 
         modelBuilder.Entity<DbUserOrgAccess>()
             .HasIndex(a => a.OrgId);
+
+        modelBuilder.Entity<DbOrganizationInvitation>()
+            .HasIndex(i => i.TargetUserId);
+
+        modelBuilder.Entity<DbOrganizationInvitation>()
+            .HasIndex(i => i.OrgId);
     }
 }

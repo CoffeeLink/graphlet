@@ -36,6 +36,21 @@ public class DbWorkspaceInvitation
     public DateTime Expires { get; set; }
 }
 
+public class DbOrganizationInvitation
+{
+    [Key]
+    public Guid Id { get; set; }
+
+    public Guid OrgId { get; set; }
+    public Guid TargetUserId { get; set; }
+    public AccessLevel AccessLevel { get; set; }
+
+    // Meta
+    public Guid InviteMadeBy { get; set; }
+    public DateTime Created { get; set; }
+    public DateTime Expires { get; set; }
+}
+
 public class DbOrganization
 {
     [Key]

@@ -190,11 +190,26 @@ public class EfWorkspaceRepository(GrahpletDbContext db) : IWorkspaceRepository
 {
     public async Task<List<Workspace>> GetWorkspacesAsync(Guid userId)
     {
-        // Get workspace IDs user has access to
-        var workspaceIds = await db.UserWorkspaceAccess
+        // Get workspace IDs user has direct or organization-based access to
+        var directWorkspaceIds = await db.UserWorkspaceAccess
             .Where(a => a.UserId == userId)
             .Select(a => a.WorkspaceId)
             .ToListAsync();
+
+        var orgIds = await db.UserOrgAccess
+            .Where(a => a.UserId == userId)
+            .Select(a => a.OrgId)
+            .ToListAsync();
+
+        var orgWorkspaceIds = await db.OrgWorkspaceOwners
+            .Where(o => orgIds.Contains(o.OrgId))
+            .Select(o => o.WorkspaceId)
+            .ToListAsync();
+
+        var workspaceIds = directWorkspaceIds
+            .Union(orgWorkspaceIds)
+            .Distinct()
+            .ToList();
 
         return await db.Workspaces
             .Where(w => workspaceIds.Contains(w.Id))
@@ -589,9 +604,18 @@ public class EfAccessRepository(GrahpletDbContext db) : IAccessRepository
         var access = await db.UserWorkspaceAccess.AsNoTracking()
             .FirstOrDefaultAsync(a => a.UserId == userId && a.WorkspaceId == workspaceId);
 
-        if (access == null) return false;
+        if (access != null)
+        {
+            return AccessLevelHelper.MeetsMinimum(access.AccessLevel, minimumLevel);
+        }
 
-        return AccessLevelHelper.MeetsMinimum(access.AccessLevel, minimumLevel);
+        var orgId = await GetWorkspaceOrgIdAsync(workspaceId);
+        if (orgId == null)
+        {
+            return false;
+        }
+
+        return await HasOrgAccessAsync(userId, orgId.Value, minimumLevel);
     }
 
     // Organization Access
@@ -778,6 +802,127 @@ public class EfAccessRepository(GrahpletDbContext db) : IAccessRepository
         if (inv == null) return false;
 
         db.WorkspaceInvitations.Remove(inv);
+        await db.SaveChangesAsync();
+        return true;
+    }
+
+    // Organization Invitations
+    public async Task<OrganizationInvitation?> GetOrganizationInvitationAsync(Guid invitationId)
+    {
+        var inv = await db.OrganizationInvitations.AsNoTracking()
+            .FirstOrDefaultAsync(i => i.Id == invitationId);
+
+        if (inv == null) return null;
+
+        var orgName = await db.Organizations.AsNoTracking()
+            .Where(o => o.Id == inv.OrgId)
+            .Select(o => o.Name)
+            .FirstOrDefaultAsync() ?? string.Empty;
+
+        return new OrganizationInvitation
+        {
+            Id = inv.Id,
+            OrgId = inv.OrgId,
+            OrganizationName = orgName,
+            TargetUserId = inv.TargetUserId,
+            AccessLevel = inv.AccessLevel.ToString(),
+            InviteMadeBy = inv.InviteMadeBy,
+            Created = inv.Created,
+            Expires = inv.Expires
+        };
+    }
+
+    public async Task<List<OrganizationInvitation>> GetUserOrganizationInvitationsAsync(Guid userId)
+    {
+        return await db.OrganizationInvitations.AsNoTracking()
+            .Where(i => i.TargetUserId == userId && i.Expires > DateTime.UtcNow)
+            .Join(db.Organizations.AsNoTracking(),
+                inv => inv.OrgId,
+                org => org.Id,
+                (inv, org) => new OrganizationInvitation
+                {
+                    Id = inv.Id,
+                    OrgId = inv.OrgId,
+                    OrganizationName = org.Name,
+                    TargetUserId = inv.TargetUserId,
+                    AccessLevel = inv.AccessLevel.ToString(),
+                    InviteMadeBy = inv.InviteMadeBy,
+                    Created = inv.Created,
+                    Expires = inv.Expires
+                })
+            .ToListAsync();
+    }
+
+    public async Task<OrganizationInvitation> CreateOrganizationInvitationAsync(Guid orgId, Guid targetUserId, string accessLevel, Guid inviteMadeBy, DateTime? expires = null)
+    {
+        var existing = await db.OrganizationInvitations.FirstOrDefaultAsync(i => i.OrgId == orgId && i.TargetUserId == targetUserId);
+
+        if (existing != null && existing.Expires < DateTime.UtcNow)
+        {
+            db.OrganizationInvitations.Remove(existing);
+            existing = null;
+        }
+
+        if (existing != null)
+        {
+            existing.AccessLevel = AccessLevelHelper.Parse(accessLevel);
+            existing.InviteMadeBy = inviteMadeBy;
+            existing.Created = DateTime.UtcNow;
+            existing.Expires = expires ?? DateTime.UtcNow.AddDays(7);
+        }
+        else
+        {
+            existing = new DbOrganizationInvitation
+            {
+                Id = Guid.NewGuid(),
+                OrgId = orgId,
+                TargetUserId = targetUserId,
+                AccessLevel = AccessLevelHelper.Parse(accessLevel),
+                InviteMadeBy = inviteMadeBy,
+                Created = DateTime.UtcNow,
+                Expires = expires ?? DateTime.UtcNow.AddDays(7)
+            };
+            db.OrganizationInvitations.Add(existing);
+        }
+
+        await db.SaveChangesAsync();
+
+        var orgName = await db.Organizations.AsNoTracking()
+            .Where(o => o.Id == orgId)
+            .Select(o => o.Name)
+            .FirstOrDefaultAsync() ?? string.Empty;
+
+        return new OrganizationInvitation
+        {
+            Id = existing.Id,
+            OrgId = existing.OrgId,
+            OrganizationName = orgName,
+            TargetUserId = existing.TargetUserId,
+            AccessLevel = existing.AccessLevel.ToString(),
+            InviteMadeBy = existing.InviteMadeBy,
+            Created = existing.Created,
+            Expires = existing.Expires
+        };
+    }
+
+    public async Task<bool> AcceptOrganizationInvitationAsync(Guid invitationId, Guid userId)
+    {
+        var inv = await db.OrganizationInvitations.FirstOrDefaultAsync(i => i.Id == invitationId && i.TargetUserId == userId);
+        if (inv == null || inv.Expires < DateTime.UtcNow) return false;
+
+        await GrantOrgAccessAsync(userId, inv.OrgId, inv.AccessLevel.ToString(), inv.InviteMadeBy);
+
+        db.OrganizationInvitations.Remove(inv);
+        await db.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> DeclineOrganizationInvitationAsync(Guid invitationId, Guid userId)
+    {
+        var inv = await db.OrganizationInvitations.FirstOrDefaultAsync(i => i.Id == invitationId && i.TargetUserId == userId);
+        if (inv == null) return false;
+
+        db.OrganizationInvitations.Remove(inv);
         await db.SaveChangesAsync();
         return true;
     }
