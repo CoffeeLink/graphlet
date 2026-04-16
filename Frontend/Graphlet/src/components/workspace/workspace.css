@@ -14,13 +14,88 @@
   gap: 12px;
   box-sizing: border-box;
 }
-.workspace-error{
+
+.workspace-toolbar-left{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
+}
+
+/* Search */
+.workspace-search{
+  position: relative;
+  width: 280px;
+  flex: 0 0 auto;
+}
+
+.workspace-search-input{
+  width: 100%;
+  height: 36px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(0,0,0,0.35);
+  outline: none;
+  box-sizing: border-box;
+  background: #ffffff;
+  color: #111111;
+}
+
+.workspace-search-input::placeholder{
+  color: rgba(0,0,0,0.55);
+}
+
+.workspace-search-input:focus{
+  border-color: rgba(0,0,0,0.65);
+}
+
+.workspace-search-results{
   position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  color: var(--error-text-color);
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  color: #111111;
+  border: 1px solid rgba(0,0,0,0.25);
+  border-radius: 10px;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.12);
+  overflow: hidden;
+  max-height: 260px;
+  overflow-y: auto;
+  z-index: 50;
+}
+
+.workspace-search-result{
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  background: transparent;
+  color: inherit;
+  border: none;
+  cursor: pointer;
+}
+
+.workspace-search-result:hover{
+  background: rgba(0,0,0,0.06);
+}
+
+.workspace-search-empty{
+  padding: 10px 12px;
+  color: rgba(0,0,0,0.6);
+}
+
+.workspace-error{
+  position: static;
+  left: auto;
+  transform: none;
+  color: var(--error-text-color, #ff4d4f);
   pointer-events: none;
   white-space: nowrap;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .workspace-canvas{
@@ -42,13 +117,13 @@
 }
 
 .floating-toolbar{
-  flex: 1;
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 8px;
+  margin-left: auto; /* push actions to the far right */
 }
-.floating-toolbar .add-test-note-btn{
+.add-test-note-btn{
   width: 150px;
   height: 100%;
   background: var(--button--color);

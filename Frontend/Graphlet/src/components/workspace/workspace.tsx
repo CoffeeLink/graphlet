@@ -8,8 +8,53 @@ export default function Workspace({workspaceId}: { workspaceId?: string }) {
     const [errorText, setErrorText] = useState("");
     const [notes, setNotes] = useState<Note[]>([]);
 
+    // Auto-hide error messages after a few seconds
+    useEffect(() => {
+        if (!errorText) return;
+        const t = window.setTimeout(() => setErrorText(""), 4000);
+        return () => window.clearTimeout(t);
+    }, [errorText]);
+
+    const FORBIDDEN_MESSAGE = 'Forbidden: try to log in, or ask for higher priviliges!';
+
+    function handleForbidden(resp: Response): boolean {
+        if (resp.status === 403) {
+            setErrorText(FORBIDDEN_MESSAGE);
+            return true;
+        }
+        return false;
+    }
+
     // Linking mode state
     const [linkingSourceId, setLinkingSourceId] = useState<string | null>(null);
+
+    // Toolbar search (by note title)
+    const [searchQuery, setSearchQuery] = useState("");
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
+    const searchRef = useRef<HTMLDivElement | null>(null);
+
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+    const searchResults = normalizedQuery.length === 0
+        ? []
+        : notes
+            .filter(n => (n.title ?? "").toLowerCase().includes(normalizedQuery))
+            .slice(0, 10);
+
+    function centerOnNote(note: Note) {
+        // Notes are positioned relative to canvas center; offset is added to all notes.
+        // To bring a note to the center, offset must cancel out note.x/note.y.
+        setOffset({x: -note.x, y: -note.y});
+    }
+
+    useEffect(() => {
+        function handleClickOutside(e: MouseEvent) {
+            if (!searchRef.current) return;
+            if (!searchRef.current.contains(e.target as Node)) setIsSearchOpen(false);
+        }
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     // Pan offset applied to all notes. Notes positions are relative to center.
     const [offset, setOffset] = useState({x: 0, y: 0});
@@ -59,6 +104,12 @@ export default function Workspace({workspaceId}: { workspaceId?: string }) {
                         Authorization: `Bearer ${localStorage.getItem("token")}`
                     }
                 });
+
+                if (handleForbidden(raw)) {
+                    setNotes([]);
+                    return;
+                }
+
                 if (raw.status !== 200) {
                     setErrorText("Couldn't fetch notes: " + raw.status + " — using sample notes for testing.");
                     setNotes([
@@ -128,6 +179,9 @@ export default function Workspace({workspaceId}: { workspaceId?: string }) {
                 },
                 body: JSON.stringify(body)
             });
+
+            if (handleForbidden(resp)) return;
+
             if (!resp.ok) {
                 let txt = `${resp.status} ${resp.statusText}`;
                 try {
@@ -157,6 +211,9 @@ export default function Workspace({workspaceId}: { workspaceId?: string }) {
                 Authorization: `Bearer ${localStorage.getItem("token")}`
             }
         });
+
+        if (handleForbidden(res)) return;
+
         if (res.status !== 204) {
             setErrorText("Couldn't delete note:" + res.status);
         } else {
@@ -190,7 +247,26 @@ export default function Workspace({workspaceId}: { workspaceId?: string }) {
         setNotes(prev => prev.map(n => n.id === id ? {...n, ...patch} : n));
     }
 
+    function notesAlreadyRelated(aId: string, bId: string): boolean {
+        const a = notes.find(n => n.id === aId);
+        const b = notes.find(n => n.id === bId);
+
+        const hasIn = (n?: Note) => (n?.relations ?? []).some(r => {
+            const conn = r.connection || [];
+            return conn.includes(aId) && conn.includes(bId);
+        });
+
+        return hasIn(a) || hasIn(b);
+    }
+
     async function createRelation(sourceId: string, targetId: string) {
+        if (sourceId === targetId) return;
+
+        if (notesAlreadyRelated(sourceId, targetId)) {
+            setErrorText('These notes are already related.');
+            return;
+        }
+
         if (!workspaceId) {
             // Local simulation
             // eslint-disable-next-line react-hooks/purity
@@ -201,6 +277,13 @@ export default function Workspace({workspaceId}: { workspaceId?: string }) {
             setNotes(prev => prev.map(n => {
                 // Update both source and target notes locally
                 if (n.id === sourceId || n.id === targetId) {
+                    // extra safety: avoid duplicates if state changed between click and setState
+                    const already = n.relations.some(r => {
+                        const conn = r.connection || [];
+                        return conn.includes(sourceId) && conn.includes(targetId);
+                    });
+                    if (already) return n;
+
                     return {...n, relations: [...n.relations, {id: newRelId, connection: [sourceId, targetId], name}]};
                 }
                 return n;
@@ -220,6 +303,9 @@ export default function Workspace({workspaceId}: { workspaceId?: string }) {
                 },
                 body: JSON.stringify({otherId: targetId, name})
             });
+
+            if (handleForbidden(resp)) return;
+
             if (!resp.ok) {
                 setErrorText(`Failed to create relation: ${resp.status}`);
                 return;
@@ -238,7 +324,7 @@ export default function Workspace({workspaceId}: { workspaceId?: string }) {
                 return n;
             }));
         } catch (e) {
-            setErrorText("Failed to create relation: " + String(e));
+            setErrorText('Failed to create relation: ' + String(e));
         }
     }
 
@@ -260,6 +346,9 @@ export default function Workspace({workspaceId}: { workspaceId?: string }) {
                     Authorization: `Bearer ${localStorage.getItem('token')}`
                 }
             });
+
+            if (handleForbidden(resp)) return;
+
             if (!resp.ok) {
                 setErrorText(`Failed to delete relation: ${resp.status}`);
                 return;
@@ -304,6 +393,9 @@ export default function Workspace({workspaceId}: { workspaceId?: string }) {
                 },
                 body: JSON.stringify(body)
             });
+
+            if (handleForbidden(resp)) return;
+
             if (!resp.ok) {
                 setErrorText(`Failed to create note: ${resp.status} ${resp.statusText}`);
                 // fallback to local
@@ -315,7 +407,8 @@ export default function Workspace({workspaceId}: { workspaceId?: string }) {
                 id: created.id ?? id,
                 title: created.name ?? note.title,
                 content: created.value ?? note.content,
-                x: Number(created.positionX ?? note.x) || 0,
+                x: Number(created.positionX ?? note.x) || 0
+                ,
                 y: Number(created.positionY ?? note.y) || 0,
                 relations: []
             };
@@ -375,16 +468,65 @@ export default function Workspace({workspaceId}: { workspaceId?: string }) {
         <section style={{height: '100%', display: 'flex', flexDirection: 'column'}}>
             {/* toolbar */}
             <div id="workspace-toolbar" className="workspace-toolbar">
-                <div id="workspace-error" className="workspace-error">{errorText}</div>
-                {linkingSourceId &&
-                    <div className="workspace-message" style={{color: 'blue'}}>Select a note to link... (Click
-                        background to cancel)</div>}
-                {/* floating test toolbar on the canvas */}
-                <div className="floating-toolbar">
-                    <button id="add-new-note-btn" onClick={addTestNote} className="add-test-note-btn">Add new note
+                <div className="workspace-toolbar-left">
+                    <button id="add-new-note-btn" onClick={addTestNote} className="add-test-note-btn">
+                        Add new note
                     </button>
-                    <button id="workspace-close-btn" onClick={handleWorkspaceClose}
-                            className="workspace-close-btn">Close
+
+                    {/* search moved to the left */}
+                    <div ref={searchRef} className="workspace-search">
+                        <input
+                            id="workspace-search-input"
+                            className="workspace-search-input"
+                            type="text"
+                            value={searchQuery}
+                            placeholder="Search notes by title..."
+                            onFocus={() => setIsSearchOpen(true)}
+                            onChange={(e) => {
+                                setSearchQuery(e.target.value);
+                                setIsSearchOpen(true);
+                            }}
+                        />
+
+                        {isSearchOpen && normalizedQuery.length > 0 && (
+                            <div id="workspace-search-results" className="workspace-search-results">
+                                {searchResults.length === 0 ? (
+                                    <div className="workspace-search-empty">No matches</div>
+                                ) : (
+                                    searchResults.map(n => (
+                                        <button
+                                            key={n.id}
+                                            id={`workspace-search-result-${n.id}`}
+                                            type="button"
+                                            className="workspace-search-result"
+                                            onClick={() => {
+                                                centerOnNote(n);
+                                                setLinkingSourceId(null);
+                                                setSearchQuery('');
+                                                setIsSearchOpen(false);
+                                            }}
+                                        >
+                                            {n.title ?? 'Untitled'}
+                                        </button>
+                                    ))
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* error moved to the right of search */}
+                    <div id="workspace-error" className="workspace-error">{errorText}</div>
+                    {linkingSourceId && (
+                        <div className="workspace-message" style={{color: 'blue'}}>
+                            Select a note to link... (Click background to cancel)
+                        </div>
+                    )}
+                </div>
+
+                {/* actions */}
+                <div className="floating-toolbar">
+                    <button id="workspace-close-btn" onClick={handleWorkspaceClose} className="workspace-close-btn">
+                        Close
                     </button>
                 </div>
             </div>

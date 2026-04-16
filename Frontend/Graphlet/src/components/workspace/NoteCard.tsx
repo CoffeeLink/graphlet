@@ -39,7 +39,7 @@ export function NoteCard({note, relations, isLinking, onSelect, onStartLinking, 
     function handleNoteMouseDown(e: React.MouseEvent){
         e.stopPropagation();
         if (e.button !== 0) return;
-        
+
         // Linking Interception
         if (isLinking) {
             onSelect();

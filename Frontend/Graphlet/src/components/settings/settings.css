@@ -1,9 +1,13 @@
 .settings-page{
     display: flex;
     flex-direction: row;
-    height: 100vh;
+    /* Use min-height instead of a fixed height so long settings pages don't reveal
+       the underlying page background while scrolling. */
+    min-height: 100vh;
+    height: auto;
     width: 90vw;
     margin-left: 20px;
+    background-color: var(--primary-background-color);
 }
 
 .settings-right{
