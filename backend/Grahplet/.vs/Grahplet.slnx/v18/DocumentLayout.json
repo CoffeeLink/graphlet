@@ -54,7 +54,8 @@
               "RelativeToolTip": "Grahplet\\Grahplet.http",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAEAAAAbAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003502|",
-              "WhenOpened": "2026-02-01T10:40:58.387Z"
+              "WhenOpened": "2026-02-01T10:40:58.387Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -64,7 +65,7 @@
               "RelativeDocumentMoniker": "Grahplet\\Configuration.cs",
               "ToolTip": "D:\\Suli\\Project\\13-project\\graphlet\\backend\\Grahplet\\Grahplet\\Configuration.cs",
               "RelativeToolTip": "Grahplet\\Configuration.cs",
-              "ViewState": "AgIAAAsAAAAAAAAAAAAuwB4AAAAwAAAAAAAAAA==",
+              "ViewState": "AgIAAB4AAAAAAAAAAAAAAB4AAAAwAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-02-01T10:35:17.671Z",
               "EditorCaption": ""
@@ -79,7 +80,8 @@
               "RelativeToolTip": "Grahplet\\Models.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-01T10:35:12.046Z"
+              "WhenOpened": "2026-02-01T10:35:12.046Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -91,7 +93,8 @@
               "RelativeToolTip": "Grahplet\\Program.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-01T10:35:08.184Z"
+              "WhenOpened": "2026-02-01T10:35:08.184Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -103,7 +106,8 @@
               "RelativeToolTip": "Grahplet\\Grahplet.csproj",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
-              "WhenOpened": "2026-01-30T14:21:55.616Z"
+              "WhenOpened": "2026-01-30T14:21:55.616Z",
+              "EditorCaption": ""
             }
           ]
         },

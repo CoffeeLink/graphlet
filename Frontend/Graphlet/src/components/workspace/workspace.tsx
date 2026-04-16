@@ -8,6 +8,158 @@ export default function Workspace({workspaceId}: { workspaceId?: string }) {
     const [errorText, setErrorText] = useState("");
     const [notes, setNotes] = useState<Note[]>([]);
 
+    const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+    const wsRef = useRef<WebSocket | null>(null);
+
+    function wsSend(obj: unknown) {
+        const ws = wsRef.current;
+        if (!ws || ws.readyState !== WebSocket.OPEN) return;
+        ws.send(JSON.stringify(obj));
+    }
+
+    function sendCustom(customType: string, payload: unknown) {
+        if (!currentUserId) return;
+        wsSend({type: 'Custom', userId: currentUserId, customType, payload});
+    }
+
+    // Fetch current user id (needed for Lock/Custom messages)
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            setCurrentUserId(null);
+            return;
+        }
+
+        let cancelled = false;
+        (async () => {
+            try {
+                const resp = await fetch('http://localhost:5188/api/user/me', {
+                    headers: {Authorization: `Bearer ${token}`}
+                });
+                if (!resp.ok) return;
+                const me = await resp.json();
+                if (!cancelled) setCurrentUserId(me?.id ?? null);
+            } catch {
+                // ignore
+            }
+        })();
+
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
+    // WebSocket live session (per workspace)
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (!workspaceId || !token) return;
+
+        const ws = new WebSocket('ws://localhost:5188/ws/live');
+        wsRef.current = ws;
+
+        ws.onopen = () => {
+            wsSend({type: 'Auth', token, workspace: workspaceId});
+        };
+
+        ws.onmessage = (ev) => {
+            try {
+                const msg = JSON.parse(String(ev.data));
+
+                switch (msg?.type) {
+                    case 'Ping':
+                        wsSend({type: 'Pong'});
+                        return;
+
+                    case 'ServerError':
+                        if (msg?.message) setErrorText(String(msg.message));
+                        return;
+
+                    case 'Custom': {
+                        const customType: string = msg?.customType;
+                        const payload = msg?.payload;
+
+                        // Apply remote changes to local state
+                        if (customType === 'NoteCreated') {
+                            const note = payload?.note as Note | undefined;
+                            if (!note?.id) return;
+                            setNotes(prev => prev.some(n => n.id === note.id) ? prev : [...prev, {...note, relations: note.relations ?? []}]);
+                            return;
+                        }
+
+                        if (customType === 'NoteUpdated') {
+                            const noteId = payload?.noteId as string | undefined;
+                            const patch = payload?.patch as Partial<Note> | undefined;
+                            if (!noteId || !patch) return;
+                            setNotes(prev => prev.map(n => n.id === noteId ? {...n, ...patch} : n));
+                            return;
+                        }
+
+                        if (customType === 'NoteDeleted') {
+                            const noteId = payload?.noteId as string | undefined;
+                            if (!noteId) return;
+                            setNotes(prev => prev
+                                .filter(n => n.id !== noteId)
+                                .map(n => ({
+                                    ...n,
+                                    relations: (n.relations ?? []).filter(r => !(r.connection || []).includes(noteId))
+                                }))
+                            );
+                            return;
+                        }
+
+                        if (customType === 'RelationCreated') {
+                            const rel = payload?.relation as { id: string; connection: string[]; name?: string } | undefined;
+                            if (!rel?.id || !Array.isArray(rel.connection)) return;
+
+                            setNotes(prev => prev.map(n => {
+                                if (!rel.connection.includes(n.id)) return n;
+                                if ((n.relations ?? []).some(r => r.id === rel.id)) return n;
+                                return {
+                                    ...n,
+                                    relations: [...(n.relations ?? []), {id: rel.id, connection: rel.connection, name: rel.name ?? 'Relation'}]
+                                };
+                            }));
+                            return;
+                        }
+
+                        if (customType === 'RelationDeleted') {
+                            const relationId = payload?.relationId as string | undefined;
+                            if (!relationId) return;
+                            setNotes(prev => prev.map(n => ({
+                                ...n,
+                                relations: (n.relations ?? []).filter(r => r.id !== relationId)
+                            })));
+                            return;
+                        }
+                        return;
+                    }
+
+                    default:
+                        return;
+                }
+            } catch {
+                // ignore
+            }
+        };
+
+        ws.onclose = () => {
+            if (wsRef.current === ws) wsRef.current = null;
+        };
+
+        ws.onerror = () => {
+            // handled by onclose mostly
+        };
+
+        return () => {
+            try {
+                ws.close();
+            } catch {
+                void 0;
+            }
+            if (wsRef.current === ws) wsRef.current = null;
+        };
+    }, [workspaceId]);
+
     // Auto-hide error messages after a few seconds
     useEffect(() => {
         if (!errorText) return;
@@ -191,7 +343,11 @@ export default function Workspace({workspaceId}: { workspaceId?: string }) {
                     void 0;
                 }
                 setErrorText("Failed to save note: " + txt);
+                return;
             }
+
+            // Broadcast successful update so other users see it live
+            sendCustom('NoteUpdated', {noteId, patch});
         } catch (e) {
             const msg = e instanceof Error ? e.message : String(e);
             setErrorText("Failed to save note: " + msg);
@@ -217,7 +373,14 @@ export default function Workspace({workspaceId}: { workspaceId?: string }) {
         if (res.status !== 204) {
             setErrorText("Couldn't delete note:" + res.status);
         } else {
-            setNotes(n => n.filter(note => note.id !== id));
+            setNotes(prev => prev
+                .filter(note => note.id !== id)
+                .map(n => ({
+                    ...n,
+                    relations: (n.relations ?? []).filter(r => !(r.connection || []).includes(id))
+                }))
+            );
+            sendCustom('NoteDeleted', {noteId: id});
         }
     }
 
@@ -312,9 +475,10 @@ export default function Workspace({workspaceId}: { workspaceId?: string }) {
             }
             const created = await resp.json();
 
+            const conn = created.connection || [sourceId, targetId];
+
             // Update all notes involved in the relation
             setNotes(prev => prev.map(n => {
-                const conn = created.connection || [sourceId, targetId];
                 if (conn.includes(n.id)) {
                     // Prevent duplicates
                     if (n.relations.find(r => r.id === created.id)) return n;
@@ -323,6 +487,9 @@ export default function Workspace({workspaceId}: { workspaceId?: string }) {
                 }
                 return n;
             }));
+
+            // Broadcast so other users add the relation
+            sendCustom('RelationCreated', {relation: {id: created.id, connection: conn, name: created.name}});
         } catch (e) {
             setErrorText('Failed to create relation: ' + String(e));
         }
@@ -359,13 +526,17 @@ export default function Workspace({workspaceId}: { workspaceId?: string }) {
                 ...n,
                 relations: n.relations.filter(r => r.id !== relationId)
             })));
+
+            sendCustom('RelationDeleted', {relationId});
         } catch (e) {
             setErrorText("Failed to delete relation: " + String(e));
         }
     }
 
     // Add a test note at center for manual testing
+    // eslint-disable-next-line react-hooks/purity
     async function addTestNote() {
+        // eslint-disable-next-line react-hooks/purity
         const id = `test-${Date.now()}`;
         const note: Note = {id, title: 'New note', content: 'New note text', x: 0, y: 0, relations: []};
 
@@ -407,12 +578,12 @@ export default function Workspace({workspaceId}: { workspaceId?: string }) {
                 id: created.id ?? id,
                 title: created.name ?? note.title,
                 content: created.value ?? note.content,
-                x: Number(created.positionX ?? note.x) || 0
-                ,
+                x: Number(created.positionX ?? note.x) || 0,
                 y: Number(created.positionY ?? note.y) || 0,
                 relations: []
             };
             setNotes(prev => [...prev, mapped]);
+            sendCustom('NoteCreated', {note: mapped});
         } catch (e) {
             const msg = e instanceof Error ? e.message : String(e);
             setErrorText("Failed to create note: " + msg);
